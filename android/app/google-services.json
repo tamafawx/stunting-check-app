@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1095681239103",
+    "project_id": "fauzanpriatmana-firebase",
+    "storage_bucket": "fauzanpriatmana-firebase.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1095681239103:android:bf64c464ce5cdc56f0f08a",
+        "android_client_info": {
+          "package_name": "com.example.flutter_stunting_posyandu"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzPG-uZTBXInoj4tggnMzM_HgO0UTYF7k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
