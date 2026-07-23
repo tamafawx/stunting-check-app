@@ -1,17 +1,23 @@
+// Admin dapat mengelola dan melihat user beserta informasi
+// singkat dari nama, email, dan role-nya. Dan juga bisa melakukan
+// edit pengguna serta menonaktifkan pengguna
+
+// Role yang dapat akses:
+// - Admin
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-// Tambahkan baris import ini di bagian atas
-import 'edit_pengguna_admin.dart';
+import 'pengguna_edit.dart';
 
-class KelolaPenggunaAdmin extends StatefulWidget {
-  const KelolaPenggunaAdmin({super.key});
+class KelolaPengguna extends StatefulWidget {
+  const KelolaPengguna({super.key});
 
   @override
-  State<KelolaPenggunaAdmin> createState() => _KelolaPenggunaAdminState();
+  State<KelolaPengguna> createState() => _KelolaPenggunaState();
 }
 
-class _KelolaPenggunaAdminState extends State<KelolaPenggunaAdmin> {
+class _KelolaPenggunaState extends State<KelolaPengguna> {
   String _searchQuery = '';
   String _selectedRole = 'Semua';
   String _selectedStatus = 'Aktif';
@@ -135,7 +141,7 @@ class _KelolaPenggunaAdminState extends State<KelolaPenggunaAdmin> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -400,8 +406,7 @@ class _KelolaPenggunaAdminState extends State<KelolaPenggunaAdmin> {
                     String email = userData['email'] ?? 'Tanpa Email';
                     String role = userData['role'] ?? 'Tidak diketahui';
                     String status = userData['status'] ?? 'aktif';
-                    String? profileUrl =
-                        userData['profileUrl']; // Mengambil URL foto profil dari Firestore
+                    String? profileUrl = userData['profileUrl'];
 
                     bool isActive = status == 'aktif';
                     Color roleColor = _getRoleColor(role, isActive);
@@ -413,7 +418,7 @@ class _KelolaPenggunaAdminState extends State<KelolaPenggunaAdmin> {
                         borderRadius: BorderRadius.circular(16.0),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -432,7 +437,7 @@ class _KelolaPenggunaAdminState extends State<KelolaPenggunaAdmin> {
                         ),
                         leading: CircleAvatar(
                           radius: 24,
-                          backgroundColor: roleColor.withOpacity(0.15),
+                          backgroundColor: roleColor.withValues(alpha: 0.15),
                           backgroundImage:
                               profileUrl != null && profileUrl.isNotEmpty
                               ? NetworkImage(profileUrl)
@@ -484,10 +489,10 @@ class _KelolaPenggunaAdminState extends State<KelolaPenggunaAdmin> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: roleColor.withOpacity(0.1),
+                                color: roleColor.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: roleColor.withOpacity(0.3),
+                                  color: roleColor.withValues(alpha: 0.3),
                                 ),
                               ),
                               child: Text(
@@ -511,11 +516,10 @@ class _KelolaPenggunaAdminState extends State<KelolaPenggunaAdmin> {
                           ),
                           onSelected: (value) {
                             if (value == 'edit') {
-                              // Mengarahkan ke halaman Edit Pengguna
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => EditPenggunaAdmin(
+                                  builder: (context) => EditPengguna(
                                     docId: docId,
                                     currentName: fullName,
                                     email: email,

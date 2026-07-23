@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class DetailEdukasiAdminScreen extends StatelessWidget {
+class DetailEdukasi extends StatelessWidget {
   final Map<String, dynamic> data;
 
-  const DetailEdukasiAdminScreen({super.key, required this.data});
+  const DetailEdukasi({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {

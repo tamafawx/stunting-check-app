@@ -1,18 +1,24 @@
+// Halaman untuk menampilkan pengelolaan jadwal untuk admin.
+// Disini admin bisa membuat jadwal melewati tambah jadwal dan
+// mengelola jadwal untuk orang tua bisa melihat.
+
+// Role yang dapat akses:
+// - Admin
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
-import 'form_jadwal_admin.dart';
+import 'jadwal_tambah.dart';
 
-class KelolaJadwalAdminScreen extends StatefulWidget {
-  const KelolaJadwalAdminScreen({super.key});
+class KelolaJadwal extends StatefulWidget {
+  const KelolaJadwal({super.key});
 
   @override
-  State<KelolaJadwalAdminScreen> createState() =>
-      _KelolaJadwalAdminScreenState();
+  State<KelolaJadwal> createState() => _KelolaJadwalState();
 }
 
-class _KelolaJadwalAdminScreenState extends State<KelolaJadwalAdminScreen> {
+class _KelolaJadwalState extends State<KelolaJadwal> {
   String _selectedKategori = 'Semua';
 
   Future<void> _hapusJadwal(String docId, String judul) async {

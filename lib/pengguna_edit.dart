@@ -3,13 +3,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
-class EditPenggunaAdmin extends StatefulWidget {
+class EditPengguna extends StatefulWidget {
   final String docId;
   final String currentName;
   final String email;
   final String role;
 
-  const EditPenggunaAdmin({
+  const EditPengguna({
     super.key,
     required this.docId,
     required this.currentName,
@@ -18,10 +18,10 @@ class EditPenggunaAdmin extends StatefulWidget {
   });
 
   @override
-  State<EditPenggunaAdmin> createState() => _EditPenggunaAdminState();
+  State<EditPengguna> createState() => _EditPenggunaState();
 }
 
-class _EditPenggunaAdminState extends State<EditPenggunaAdmin> {
+class _EditPenggunaState extends State<EditPengguna> {
   late TextEditingController _nameController;
   late TextEditingController _uidController;
   late TextEditingController _emailController;

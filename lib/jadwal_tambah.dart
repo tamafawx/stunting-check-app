@@ -1,3 +1,10 @@
+// Halaman untuk si admin untuk mengisi informasi jadwal baru
+// agar bisa di tampilkan pada halaman jadwal untuk orang tua
+// bisa melihat.
+
+// Role yang dapat akses:
+// - Admin
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';

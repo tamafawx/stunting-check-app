@@ -7,10 +7,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'admin/edukasi_admin.dart';
-import 'admin/kelola_pengguna_admin.dart';
+import 'edukasi.dart';
+import 'pengguna_kelola.dart';
 import 'ubah_profile.dart';
-import 'admin/kelola_jadwal_admin.dart';
+import 'jadwal_kelola.dart';
 
 class UserHeaderSection extends StatelessWidget {
   final String userId;
@@ -261,7 +261,7 @@ class QuickMenuAccess extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const KelolaPenggunaAdmin(),
+                      builder: (context) => const KelolaPengguna(),
                     ),
                   );
                 },
@@ -274,7 +274,7 @@ class QuickMenuAccess extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const KelolaJadwalAdminScreen(),
+                      builder: (context) => const KelolaJadwal(),
                     ),
                   );
                 },
@@ -286,9 +286,7 @@ class QuickMenuAccess extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => const EdukasiAdminScreen(),
-                    ),
+                    MaterialPageRoute(builder: (context) => const Edukasi()),
                   );
                 },
               ),

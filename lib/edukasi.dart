@@ -1,16 +1,27 @@
+// Menampilkan halaman edukasi yang tersedia dan juga dapat dibaca
+// nantinya pada halaman detail edukasi. Untuk tiap role ada juga
+// yang bisa menghapus konten edukasi secara keseluruhan (admin)
+// dan juga sendiri (kader dan bidan)
+
+// Role yang dapat akses:
+// - Admin
+// - Kader
+// - Bidan
+// - Orang Tua
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'detail_edukasi_admin.dart';
+import 'edukasi_detail.dart';
 
-class EdukasiAdminScreen extends StatefulWidget {
-  const EdukasiAdminScreen({super.key});
+class Edukasi extends StatefulWidget {
+  const Edukasi({super.key});
 
   @override
-  State<EdukasiAdminScreen> createState() => _EdukasiAdminScreenState();
+  State<Edukasi> createState() => _EdukasiState();
 }
 
-class _EdukasiAdminScreenState extends State<EdukasiAdminScreen> {
+class _EdukasiState extends State<Edukasi> {
   String _searchQuery = '';
   String _selectedSort = 'Terbaru';
   bool _isListView = false;
@@ -364,9 +375,7 @@ class _EdukasiAdminScreenState extends State<EdukasiAdminScreen> {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => DetailEdukasiAdminScreen(data: data),
-            ),
+            MaterialPageRoute(builder: (context) => DetailEdukasi(data: data)),
           );
         },
         child: Column(
@@ -503,9 +512,7 @@ class _EdukasiAdminScreenState extends State<EdukasiAdminScreen> {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => DetailEdukasiAdminScreen(data: data),
-            ),
+            MaterialPageRoute(builder: (context) => DetailEdukasi(data: data)),
           );
         },
         child: SizedBox(
