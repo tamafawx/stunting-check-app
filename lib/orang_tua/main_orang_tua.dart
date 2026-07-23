@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 // Import Pages (Orang Tua)
-import '/orang_tua/beranda_orang_tua.dart';
+import '../beranda_orang_tua.dart';
 import '/orang_tua/profile_orang_tua.dart';
 import '/orang_tua/balita_orang_tua.dart';
 

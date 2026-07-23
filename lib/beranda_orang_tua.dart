@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_stunting_posyandu/orang_tua/konsultasi_orang_tua.dart';
-import 'edukasi_orang_tua.dart';
-import 'detail_edukasi_orang_tua.dart';
-import 'balita_orang_tua.dart';
-import 'jadwal_orang_tua.dart'; // Import Jadwal
+import 'orang_tua/edukasi_orang_tua.dart';
+import 'orang_tua/detail_edukasi_orang_tua.dart';
+import 'orang_tua/balita_orang_tua.dart';
+import 'orang_tua/jadwal_orang_tua.dart'; // Import Jadwal
 
 class UserHeaderSection extends StatelessWidget {
   final String userId;

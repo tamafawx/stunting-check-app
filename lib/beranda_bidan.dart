@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_stunting_posyandu/bidan/konsultasi_bidan.dart';
-import 'edukasi_bidan.dart';
-import 'kelola_balita_bidan.dart';
-import 'detail_balita_bidan.dart';
+import 'bidan/edukasi_bidan.dart';
+import 'bidan/kelola_balita_bidan.dart';
+import 'bidan/detail_balita_bidan.dart';
 
 class UserHeaderSection extends StatelessWidget {
   final String userId;

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'edukasi_admin.dart';
-import 'kelola_pengguna_admin.dart';
-import 'ubah_profile_admin.dart';
-import 'kelola_jadwal_admin.dart';
+import 'admin/edukasi_admin.dart';
+import 'admin/kelola_pengguna_admin.dart';
+import 'admin/ubah_profile_admin.dart';
+import 'admin/kelola_jadwal_admin.dart';
 
 class UserHeaderSection extends StatelessWidget {
   final String userId;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'beranda_kader.dart';
+import '../beranda_kader.dart';
 import 'riwayat_kader.dart';
 import 'profile_kader.dart';
 

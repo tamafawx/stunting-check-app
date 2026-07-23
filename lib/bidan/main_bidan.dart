@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'beranda_bidan.dart';
+import '../beranda_bidan.dart';
 import 'riwayat_bidan.dart';
 import 'profile_bidan.dart';
 
