@@ -1,24 +1,33 @@
+// Halaman untuk menambahkan konten edukasi. Hanya kader dan bidan, yang
+// bsia menambahkan konten edukasi.
+
+// Role yang dapat akses:
+// - Kader
+// - Bidan
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 
-class TambahEdukasiScreen extends StatefulWidget {
+class TambahEdukasi extends StatefulWidget {
   final String userId;
   final String fullName;
+  final String role;
 
-  const TambahEdukasiScreen({
-    Key? key,
+  const TambahEdukasi({
+    super.key,
     required this.userId,
     required this.fullName,
-  }) : super(key: key);
+    required this.role,
+  });
 
   @override
-  _TambahEdukasiScreenState createState() => _TambahEdukasiScreenState();
+  State<TambahEdukasi> createState() => _TambahEdukasiState();
 }
 
-class _TambahEdukasiScreenState extends State<TambahEdukasiScreen> {
+class _TambahEdukasiState extends State<TambahEdukasi> {
   final _formKey = GlobalKey<FormState>();
   final _judulController = TextEditingController();
   final _kontenController = TextEditingController();
@@ -26,12 +35,12 @@ class _TambahEdukasiScreenState extends State<TambahEdukasiScreen> {
 
   File? _imageFile;
   bool _isLoading = false;
-  String? _fotoProfilKader;
+  String? _fotoProfilPenulis;
 
   @override
   void initState() {
     super.initState();
-    _fetchKaderProfile();
+    _fetchPenulisProfile();
   }
 
   @override
@@ -41,7 +50,7 @@ class _TambahEdukasiScreenState extends State<TambahEdukasiScreen> {
     super.dispose();
   }
 
-  Future<void> _fetchKaderProfile() async {
+  Future<void> _fetchPenulisProfile() async {
     try {
       var userDoc = await FirebaseFirestore.instance
           .collection('users')
@@ -49,7 +58,7 @@ class _TambahEdukasiScreenState extends State<TambahEdukasiScreen> {
           .get();
       if (userDoc.exists && mounted) {
         setState(() {
-          _fotoProfilKader =
+          _fotoProfilPenulis =
               userDoc.data()?['profileUrl'] ?? userDoc.data()?['fotoUrl'];
         });
       }
@@ -110,14 +119,20 @@ class _TambahEdukasiScreenState extends State<TambahEdukasiScreen> {
       try {
         String? imageUrl = await _uploadImage();
 
+        String fallbackName = widget.role.isNotEmpty
+            ? widget.role[0].toUpperCase() + widget.role.substring(1)
+            : 'Penulis';
+
         await FirebaseFirestore.instance.collection('edukasi').add({
           'judul': _judulController.text.trim(),
           'konten': _kontenController.text.trim(),
           'imageUrl': imageUrl,
           'penulisId': widget.userId,
-          'namaPenulis': widget.fullName.isNotEmpty ? widget.fullName : 'Kader',
-          'fotoPenulis': _fotoProfilKader ?? '',
-          'rolePenulis': 'Kader',
+          'namaPenulis': widget.fullName.isNotEmpty
+              ? widget.fullName
+              : fallbackName,
+          'fotoPenulis': _fotoProfilPenulis ?? '',
+          'rolePenulis': widget.role,
           'createdAt': FieldValue.serverTimestamp(),
         });
 
@@ -145,9 +160,22 @@ class _TambahEdukasiScreenState extends State<TambahEdukasiScreen> {
     }
   }
 
+  Color _getThemeColor(String role) {
+    switch (role.toLowerCase()) {
+      case 'admin':
+        return Colors.red;
+      case 'kader':
+        return Colors.blue;
+      case 'bidan':
+        return Colors.purple;
+      default:
+        return Colors.blue;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    const themeColor = Colors.blue;
+    final themeColor = _getThemeColor(widget.role);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -176,7 +204,7 @@ class _TambahEdukasiScreenState extends State<TambahEdukasiScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const CircularProgressIndicator(
+                  CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(themeColor),
                   ),
                   const SizedBox(height: 16),
@@ -199,7 +227,7 @@ class _TambahEdukasiScreenState extends State<TambahEdukasiScreen> {
                   children: [
                     Text(
                       'Cover Edukasi',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: themeColor,
@@ -215,14 +243,14 @@ class _TambahEdukasiScreenState extends State<TambahEdukasiScreen> {
                           borderRadius: BorderRadius.circular(16),
                           border: _imageFile == null
                               ? Border.all(
-                                  color: Colors.blue.shade100,
+                                  color: themeColor.withValues(alpha: 0.2),
                                   width: 2,
                                   style: BorderStyle.solid,
                                 )
                               : null,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
+                              color: Colors.black.withValues(alpha: 0.04),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -241,10 +269,10 @@ class _TambahEdukasiScreenState extends State<TambahEdukasiScreen> {
                                   Icon(
                                     Icons.add_photo_alternate_outlined,
                                     size: 48,
-                                    color: themeColor.withOpacity(0.8),
+                                    color: themeColor.withValues(alpha: 0.8),
                                   ),
                                   const SizedBox(height: 12),
-                                  const Text(
+                                  Text(
                                     'Pilih Gambar Cover',
                                     style: TextStyle(
                                       color: themeColor,
@@ -272,7 +300,7 @@ class _TambahEdukasiScreenState extends State<TambahEdukasiScreen> {
                                     end: Alignment.bottomCenter,
                                     colors: [
                                       Colors.transparent,
-                                      Colors.black.withOpacity(0.6),
+                                      Colors.black.withValues(alpha: 0.6),
                                     ],
                                   ),
                                 ),
@@ -282,10 +310,10 @@ class _TambahEdukasiScreenState extends State<TambahEdukasiScreen> {
                                     vertical: 6,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.9),
+                                    color: Colors.white.withValues(alpha: 0.9),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
-                                  child: const Row(
+                                  child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(
@@ -293,7 +321,7 @@ class _TambahEdukasiScreenState extends State<TambahEdukasiScreen> {
                                         size: 16,
                                         color: themeColor,
                                       ),
-                                      SizedBox(width: 4),
+                                      const SizedBox(width: 4),
                                       Text(
                                         'Ubah Gambar',
                                         style: TextStyle(
@@ -311,7 +339,7 @@ class _TambahEdukasiScreenState extends State<TambahEdukasiScreen> {
                     const SizedBox(height: 24),
                     Text(
                       'Informasi Detail',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: themeColor,
@@ -325,7 +353,7 @@ class _TambahEdukasiScreenState extends State<TambahEdukasiScreen> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
+                            color: Colors.black.withValues(alpha: 0.04),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -339,7 +367,7 @@ class _TambahEdukasiScreenState extends State<TambahEdukasiScreen> {
                             decoration: InputDecoration(
                               labelText: 'Judul Edukasi',
                               labelStyle: TextStyle(color: Colors.grey[600]),
-                              prefixIcon: const Icon(
+                              prefixIcon: Icon(
                                 Icons.title_rounded,
                                 color: themeColor,
                               ),
@@ -357,12 +385,12 @@ class _TambahEdukasiScreenState extends State<TambahEdukasiScreen> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
+                                borderSide: BorderSide(
                                   color: themeColor,
                                   width: 2,
                                 ),
                               ),
-                              floatingLabelStyle: const TextStyle(
+                              floatingLabelStyle: TextStyle(
                                 color: themeColor,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -385,8 +413,8 @@ class _TambahEdukasiScreenState extends State<TambahEdukasiScreen> {
                               labelText: 'Konten Edukasi',
                               alignLabelWithHint: true,
                               labelStyle: TextStyle(color: Colors.grey[600]),
-                              prefixIcon: const Padding(
-                                padding: EdgeInsets.only(bottom: 120),
+                              prefixIcon: Padding(
+                                padding: const EdgeInsets.only(bottom: 120),
                                 child: Icon(
                                   Icons.description_outlined,
                                   color: themeColor,
@@ -406,12 +434,12 @@ class _TambahEdukasiScreenState extends State<TambahEdukasiScreen> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
+                                borderSide: BorderSide(
                                   color: themeColor,
                                   width: 2,
                                 ),
                               ),
-                              floatingLabelStyle: const TextStyle(
+                              floatingLabelStyle: TextStyle(
                                 color: themeColor,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -438,7 +466,7 @@ class _TambahEdukasiScreenState extends State<TambahEdukasiScreen> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                         elevation: 4,
-                        shadowColor: themeColor.withOpacity(0.4),
+                        shadowColor: themeColor.withValues(alpha: 0.4),
                       ),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,

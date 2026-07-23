@@ -1,15 +1,22 @@
+// Halaman untuk pengukuran/perhitungan balita dari berat badan,
+// tinggi badan, lingkar kepala, dan lingkar lengan atas.
+
+// Role yang dapat akses:
+// - Kader
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'cari_balita_pemeriksaan_kader.dart';
 
-class InputPengukuranScreen extends StatefulWidget {
-  const InputPengukuranScreen({super.key});
+import 'pemeriksaan_cari_balita.dart';
+
+class InputPengukuran extends StatefulWidget {
+  const InputPengukuran({super.key});
 
   @override
-  State<InputPengukuranScreen> createState() => _InputPengukuranScreenState();
+  State<InputPengukuran> createState() => _InputPengukuranState();
 }
 
-class _InputPengukuranScreenState extends State<InputPengukuranScreen> {
+class _InputPengukuranState extends State<InputPengukuran> {
   final _formKey = GlobalKey<FormState>();
 
   // Variabel untuk menyimpan data balita yang dipilih
@@ -55,9 +62,7 @@ class _InputPengukuranScreenState extends State<InputPengukuranScreen> {
   Future<void> _pilihBalita() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const PilihBalitaPemeriksaanScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const PilihBalitaPemeriksaan()),
     );
 
     if (result != null && result is Map<String, dynamic>) {

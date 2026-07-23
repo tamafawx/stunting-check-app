@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class PilihBalitaPemeriksaanScreen extends StatefulWidget {
-  const PilihBalitaPemeriksaanScreen({super.key});
+class PilihBalitaPemeriksaan extends StatefulWidget {
+  const PilihBalitaPemeriksaan({super.key});
 
   @override
-  State<PilihBalitaPemeriksaanScreen> createState() =>
-      _PilihBalitaPemeriksaanScreenState();
+  State<PilihBalitaPemeriksaan> createState() => _PilihBalitaPemeriksaanState();
 }
 
-class _PilihBalitaPemeriksaanScreenState
-    extends State<PilihBalitaPemeriksaanScreen> {
+class _PilihBalitaPemeriksaanState extends State<PilihBalitaPemeriksaan> {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
@@ -79,7 +77,7 @@ class _PilihBalitaPemeriksaanScreenState
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -204,7 +202,7 @@ class _PilihBalitaPemeriksaanScreenState
                         border: Border.all(color: Colors.grey.shade100),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.02),
+                            color: Colors.black.withValues(alpha: 0.02),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -228,8 +226,8 @@ class _PilihBalitaPemeriksaanScreenState
                         leading: CircleAvatar(
                           radius: 24,
                           backgroundColor: jenisKelamin == 'Laki-laki'
-                              ? Colors.blue.withOpacity(0.15)
-                              : Colors.pink.withOpacity(0.15),
+                              ? Colors.blue.withValues(alpha: 0.15)
+                              : Colors.pink.withValues(alpha: 0.15),
                           child: Icon(
                             Icons.child_care,
                             color: jenisKelamin == 'Laki-laki'

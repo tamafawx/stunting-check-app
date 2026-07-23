@@ -1,3 +1,9 @@
+// Lanjutan dari tambah atau edit balita untuk mencari orang tua
+// untuk keperluan data kepemilikan balita.
+
+// Role yang dapat akses:
+// - Kader
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -14,13 +20,11 @@ class _CariOrangTuaScreenState extends State<CariOrangTuaScreen> {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
-  // Menyimpan data orang tua yang dipilih (ID dan Nama)
   late List<Map<String, String>> _selectedParents;
 
   @override
   void initState() {
     super.initState();
-    // Salin data awal agar tidak merubah data asli sebelum tombol Selesai ditekan
     _selectedParents = List.from(widget.initialSelection);
   }
 
@@ -33,7 +37,6 @@ class _CariOrangTuaScreenState extends State<CariOrangTuaScreen> {
   void _toggleSelection(String id, String name, bool isSelected) {
     setState(() {
       if (isSelected) {
-        // Cek agar tidak duplikat
         if (!_selectedParents.any((element) => element['id'] == id)) {
           _selectedParents.add({'id': id, 'name': name});
         }
@@ -63,14 +66,13 @@ class _CariOrangTuaScreenState extends State<CariOrangTuaScreen> {
       ),
       body: Column(
         children: [
-          // Bar Pencarian
           Container(
             padding: const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -113,7 +115,6 @@ class _CariOrangTuaScreenState extends State<CariOrangTuaScreen> {
               stream: FirebaseFirestore.instance
                   .collection('users')
                   .where('role', isEqualTo: 'orang-tua')
-                  // HAPUS BARIS INI: .where('status', isEqualTo: 'aktif')
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -130,13 +131,10 @@ class _CariOrangTuaScreenState extends State<CariOrangTuaScreen> {
 
                 var rawUsers = snapshot.data!.docs;
 
-                // Filter pencarian lokal DAN Filter status aktif
                 var filteredUsers = rawUsers.where((doc) {
                   var data = doc.data() as Map<String, dynamic>;
                   var name = (data['fullName'] ?? '').toString().toLowerCase();
-                  var status =
-                      data['status'] ??
-                      'aktif'; // Jika tidak ada status, anggap aktif
+                  var status = data['status'] ?? 'aktif';
 
                   bool isMatchSearch = name.contains(
                     _searchQuery.toLowerCase(),
@@ -193,7 +191,7 @@ class _CariOrangTuaScreenState extends State<CariOrangTuaScreen> {
                         },
                         secondary: CircleAvatar(
                           radius: 20,
-                          backgroundColor: Colors.blue.withOpacity(0.1),
+                          backgroundColor: Colors.blue.withValues(alpha: 0.1),
                           backgroundImage:
                               profileUrl != null && profileUrl.isNotEmpty
                               ? NetworkImage(profileUrl)
@@ -239,7 +237,7 @@ class _CariOrangTuaScreenState extends State<CariOrangTuaScreen> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, -4),
             ),
@@ -260,7 +258,6 @@ class _CariOrangTuaScreenState extends State<CariOrangTuaScreen> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  // Kirim kembali data yang dipilih ke halaman sebelumnya
                   Navigator.pop(context, _selectedParents);
                 },
                 style: ElevatedButton.styleFrom(

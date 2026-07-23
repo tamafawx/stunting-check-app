@@ -7,7 +7,7 @@
 import 'package:flutter/material.dart';
 
 import 'beranda_kader.dart';
-import 'kader/riwayat_kader.dart';
+import 'riwayat_pemeriksaan.dart';
 import 'profile.dart';
 
 class MainKader extends StatefulWidget {
@@ -30,7 +30,7 @@ class _MainKader extends State<MainKader> {
         body: TabBarView(
           children: [
             BerandaKader(userId: widget.userId, fullName: widget.fullName),
-            RiwayatKader(),
+            RiwayatPemeriksaan(role: 'kader'),
             Profile(
               userId: widget.userId,
               fullName: widget.fullName,

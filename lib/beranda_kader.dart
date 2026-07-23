@@ -6,10 +6,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_stunting_posyandu/kader/edukasi_kader.dart';
-import 'kader/kelola_balita_kader.dart';
-import 'kader/detail_balita_kader.dart';
-import 'kader/pemeriksaan_balita_kader.dart';
+
+import 'edukasi.dart';
+import 'balita_kelola.dart';
+import 'balita_detail.dart';
+import 'pemeriksaan_balita.dart';
 import 'kader/konsultasi_kader.dart';
 
 class UserHeaderSection extends StatelessWidget {
@@ -335,7 +336,7 @@ class QuickMenuAccess extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const KelolaBalitaScreen(),
+                      builder: (context) => const KelolaBalita(),
                     ),
                   );
                 },
@@ -348,7 +349,7 @@ class QuickMenuAccess extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const InputPengukuranScreen(),
+                      builder: (context) => const InputPengukuran(),
                     ),
                   );
                 },
@@ -361,9 +362,10 @@ class QuickMenuAccess extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => EdukasiKaderScreen(
+                      builder: (context) => Edukasi(
                         userId: userId,
                         fullName: fullName,
+                        role: 'kader',
                       ),
                     ),
                   );
@@ -508,7 +510,7 @@ class LiveToddlersSection extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const KelolaBalitaScreen(),
+                      builder: (context) => const KelolaBalita(),
                     ),
                   );
                 },
@@ -591,15 +593,15 @@ class LiveToddlersSection extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (context) =>
-                                DetailBalitaScreen(docId: doc.id, data: data),
+                                DetailBalita(docId: doc.id, data: data),
                           ),
                         );
                       },
                       leading: CircleAvatar(
                         radius: 20,
                         backgroundColor: jenisKelamin == 'Laki-laki'
-                            ? Colors.blue.withOpacity(0.1)
-                            : Colors.pink.withOpacity(0.1),
+                            ? Colors.blue.withValues(alpha: 0.1)
+                            : Colors.pink.withValues(alpha: 0.1),
                         backgroundImage: fotoUrl != null && fotoUrl.isNotEmpty
                             ? NetworkImage(fotoUrl)
                             : null,

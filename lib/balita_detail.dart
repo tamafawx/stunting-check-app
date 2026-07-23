@@ -1,22 +1,27 @@
+// Halaman untuk melihat informasi detail balita. Ada juga ringkasan
+// riwayat, dan grafik tampil untuk data kedepannya. Dan juga dapat
+// langsung edit (kader).
+
+// Role yang dapat akses:
+// - Kader
+// - Bidan
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'edit_balita_kader.dart';
 
-class DetailBalitaScreen extends StatefulWidget {
+import 'balita_edit.dart';
+
+class DetailBalita extends StatefulWidget {
   final String docId;
   final Map<String, dynamic> data;
 
-  const DetailBalitaScreen({
-    super.key,
-    required this.docId,
-    required this.data,
-  });
+  const DetailBalita({super.key, required this.docId, required this.data});
 
   @override
-  State<DetailBalitaScreen> createState() => _DetailBalitaScreenState();
+  State<DetailBalita> createState() => _DetailBalitaState();
 }
 
-class _DetailBalitaScreenState extends State<DetailBalitaScreen>
+class _DetailBalitaState extends State<DetailBalita>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   Map<String, dynamic> _balitaData = {};
@@ -160,7 +165,7 @@ class _DetailBalitaScreenState extends State<DetailBalitaScreen>
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
+                        color: Colors.black.withValues(alpha: 0.08),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -398,7 +403,7 @@ class _DetailBalitaScreenState extends State<DetailBalitaScreen>
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
+                      color: Colors.black.withValues(alpha: 0.03),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -611,7 +616,7 @@ class _DetailBalitaScreenState extends State<DetailBalitaScreen>
                 border: Border.all(color: Colors.grey[100]!),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.01),
+                    color: Colors.black.withValues(alpha: 0.01),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -718,7 +723,7 @@ class _DetailBalitaScreenState extends State<DetailBalitaScreen>
           border: Border.all(color: Colors.grey[100]!),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -758,7 +763,7 @@ class _DetailBalitaScreenState extends State<DetailBalitaScreen>
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 22),
@@ -868,12 +873,12 @@ class GrowthChartPainter extends CustomPainter {
 
     // WHO Standard growth reference lines (Green/Yellow bounds)
     final greenLimitPaint = Paint()
-      ..color = Colors.green.withOpacity(0.3)
+      ..color = Colors.green.withValues(alpha: 0.3)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
     final redLimitPaint = Paint()
-      ..color = Colors.red.withOpacity(0.3)
+      ..color = Colors.red.withValues(alpha: 0.3)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 

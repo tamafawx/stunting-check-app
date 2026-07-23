@@ -1,32 +1,72 @@
+// Halaman untuk mengedit data balita dari data yang ada.
+
+// Role yang dapat akses:
+// - Kader
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_cropper/image_cropper.dart';
-import 'cari_orangtua_balita_kader.dart';
 
-class TambahBalitaScreen extends StatefulWidget {
-  const TambahBalitaScreen({super.key});
+import 'balita_cari_orangtua.dart';
+
+class EditBalitaScreen extends StatefulWidget {
+  final String docId;
+  final Map<String, dynamic> data;
+
+  const EditBalitaScreen({super.key, required this.docId, required this.data});
 
   @override
-  State<TambahBalitaScreen> createState() => _TambahBalitaScreenState();
+  State<EditBalitaScreen> createState() => _EditBalitaScreenState();
 }
 
-class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
+class _EditBalitaScreenState extends State<EditBalitaScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _namaController = TextEditingController();
+  late TextEditingController _namaController;
   String? _jenisKelamin;
   DateTime? _tanggalLahir;
   bool _isLoading = false;
 
-  // Variabel untuk Gambar Profil Balita
+  // Foto State
   File? _imageFile;
+  String? _currentImageUrl;
+  bool _isImageDeleted = false;
   final ImagePicker _picker = ImagePicker();
 
-  // Variabel untuk menampung Multi Orang Tua
-  // Format: [{'id': 'user_id_1', 'name': 'Nama Orang Tua 1'}, ...]
+  // Multi Orang Tua State
   List<Map<String, String>> _selectedParents = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _namaController = TextEditingController(text: widget.data['nama']);
+    _jenisKelamin = widget.data['jenisKelamin'];
+
+    // Parse Tanggal Lahir
+    if (widget.data['tanggalLahir'] != null) {
+      _tanggalLahir = (widget.data['tanggalLahir'] as Timestamp).toDate();
+    }
+
+    _currentImageUrl = widget.data['fotoUrl'];
+
+    // Load Orang Tua jika sudah format array
+    if (widget.data['orangTuaIds'] != null &&
+        widget.data['orangTuaNames'] != null) {
+      List<dynamic> ids = widget.data['orangTuaIds'];
+      List<dynamic> names = widget.data['orangTuaNames'];
+
+      for (int i = 0; i < ids.length; i++) {
+        if (i < names.length) {
+          _selectedParents.add({
+            'id': ids[i].toString(),
+            'name': names[i].toString(),
+          });
+        }
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -42,7 +82,6 @@ class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
         imageQuality: 85,
       );
       if (pickedFile != null) {
-        // Melanjutkan ke proses potong/zoom gambar
         await _cropImage(pickedFile.path);
       }
     } catch (e) {
@@ -61,25 +100,24 @@ class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
     try {
       final CroppedFile? croppedFile = await ImageCropper().cropImage(
         sourcePath: path,
-        aspectRatio: const CropAspectRatio(
-          ratioX: 1.0,
-          ratioY: 1.0,
-        ), // Kotak sempurna
+        aspectRatio: const CropAspectRatio(ratioX: 1.0, ratioY: 1.0),
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: 'Sesuaikan Foto Balita',
             toolbarColor: Colors.blue,
             toolbarWidgetColor: Colors.white,
             initAspectRatio: CropAspectRatioPreset.square,
-            lockAspectRatio: true, // Kunci rasio agar selalu kotak
+            lockAspectRatio: true,
             hideBottomControls: false,
           ),
           IOSUiSettings(title: 'Sesuaikan Foto', aspectRatioLockEnabled: true),
         ],
       );
+
       if (croppedFile != null) {
         setState(() {
           _imageFile = File(croppedFile.path);
+          _isImageDeleted = false;
         });
       }
     } catch (e) {
@@ -149,7 +187,8 @@ class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
                         _pickImage(ImageSource.gallery);
                       },
                     ),
-                    if (_imageFile != null)
+                    if (_imageFile != null ||
+                        (_currentImageUrl != null && !_isImageDeleted))
                       _buildOptionButton(
                         icon: Icons.delete_outline_rounded,
                         label: 'Hapus',
@@ -158,6 +197,7 @@ class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
                           Navigator.pop(context);
                           setState(() {
                             _imageFile = null;
+                            _isImageDeleted = true;
                           });
                         },
                       ),
@@ -189,7 +229,7 @@ class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 28),
@@ -232,7 +272,6 @@ class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
             CariOrangTuaScreen(initialSelection: _selectedParents),
       ),
     );
-    // Jika user menekan 'Selesai', perbarui state daftar orang tua
     if (result != null && result is List<Map<String, String>>) {
       setState(() {
         _selectedParents = result;
@@ -240,7 +279,7 @@ class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
     }
   }
 
-  Future<void> _simpanData() async {
+  Future<void> _updateData() async {
     if (_formKey.currentState!.validate()) {
       if (_tanggalLahir == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -265,35 +304,44 @@ class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
       setState(() => _isLoading = true);
 
       try {
-        // 1. Upload Foto (jika ada)
-        String? fotoUrl = await _uploadImage();
+        String? finalFotoUrl = _currentImageUrl;
+        if (_isImageDeleted) {
+          finalFotoUrl = null;
+        } else if (_imageFile != null) {
+          finalFotoUrl = await _uploadImage();
+        }
 
-        // 2. Ekstrak data orang tua menjadi array
         List<String> ortuIds = _selectedParents.map((e) => e['id']!).toList();
         List<String> ortuNames = _selectedParents
             .map((e) => e['name']!)
             .toList();
         String joinedNames = ortuNames.join(', ');
 
-        // 3. Simpan ke koleksi 'balita'
-        await FirebaseFirestore.instance.collection('balita').add({
+        Map<String, dynamic> updateData = {
           'nama': _namaController.text.trim(),
           'jenisKelamin': _jenisKelamin,
-          'tanggalLahir': Timestamp.fromDate(
-            _tanggalLahir!,
-          ), // Menggunakan tanggal yang dipilih
+          'tanggalLahir': Timestamp.fromDate(_tanggalLahir!),
           'namaOrangTua': joinedNames,
           'orangTuaIds': ortuIds,
           'orangTuaNames': ortuNames,
-          'fotoUrl': fotoUrl,
-          'isHidden': false,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
+          'updatedAt': FieldValue.serverTimestamp(),
+        };
+
+        if (_isImageDeleted) {
+          updateData['fotoUrl'] = FieldValue.delete();
+        } else if (finalFotoUrl != null) {
+          updateData['fotoUrl'] = finalFotoUrl;
+        }
+
+        await FirebaseFirestore.instance
+            .collection('balita')
+            .doc(widget.docId)
+            .update(updateData);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Data balita berhasil ditambahkan'),
+              content: Text('Data Balita berhasil diperbarui'),
               backgroundColor: Colors.green,
             ),
           );
@@ -303,7 +351,7 @@ class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Gagal menyimpan data'),
+              content: Text('Terjadi kesalahan saat memperbarui data'),
               backgroundColor: Colors.red,
             ),
           );
@@ -324,7 +372,7 @@ class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text(
-          'Tambah Balita',
+          'Edit Data Balita',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -344,7 +392,7 @@ class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
                   CircularProgressIndicator(color: Colors.blue),
                   SizedBox(height: 16),
                   Text(
-                    'Menyimpan data balita...',
+                    'Menyimpan perubahan...',
                     style: TextStyle(color: Colors.grey),
                   ),
                 ],
@@ -394,8 +442,14 @@ class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
                                   backgroundColor: Colors.blue[50],
                                   backgroundImage: _imageFile != null
                                       ? FileImage(_imageFile!) as ImageProvider
-                                      : null,
-                                  child: _imageFile == null
+                                      : (_currentImageUrl != null &&
+                                                !_isImageDeleted
+                                            ? NetworkImage(_currentImageUrl!)
+                                            : null),
+                                  child:
+                                      _imageFile == null &&
+                                          (_currentImageUrl == null ||
+                                              _isImageDeleted)
                                       ? Icon(
                                           Icons.child_care_rounded,
                                           size: 60,
@@ -462,7 +516,7 @@ class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.03),
+                                  color: Colors.black.withValues(alpha: 0.03),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -495,6 +549,7 @@ class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
                                       : null,
                                 ),
                                 const SizedBox(height: 20),
+
                                 const Text(
                                   'Jenis Kelamin',
                                   style: TextStyle(
@@ -505,7 +560,7 @@ class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
                                 ),
                                 const SizedBox(height: 8),
                                 DropdownButtonFormField<String>(
-                                  value: _jenisKelamin,
+                                  initialValue: _jenisKelamin,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
                                     color: Colors.black87,
@@ -529,6 +584,7 @@ class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
                                       : null,
                                 ),
                                 const SizedBox(height: 20),
+
                                 const Text(
                                   'Tanggal Lahir',
                                   style: TextStyle(
@@ -596,7 +652,7 @@ class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.03),
+                                  color: Colors.black.withValues(alpha: 0.03),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -624,7 +680,9 @@ class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
                                           vertical: 4,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: Colors.blue.withOpacity(0.1),
+                                          color: Colors.blue.withValues(
+                                            alpha: 0.1,
+                                          ),
                                           borderRadius: BorderRadius.circular(
                                             10,
                                           ),
@@ -738,7 +796,7 @@ class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
                             width: double.infinity,
                             height: 56,
                             child: ElevatedButton(
-                              onPressed: _isLoading ? null : _simpanData,
+                              onPressed: _isLoading ? null : _updateData,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue,
                                 foregroundColor: Colors.white,
@@ -746,10 +804,10 @@ class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 elevation: 4,
-                                shadowColor: Colors.blue.withOpacity(0.3),
+                                shadowColor: Colors.blue.withValues(alpha: 0.3),
                               ),
                               child: const Text(
-                                'Simpan Data Balita',
+                                'Simpan Perubahan',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -769,7 +827,6 @@ class _TambahBalitaScreenState extends State<TambahBalitaScreen> {
     );
   }
 
-  // Fungsi utilitas untuk membuat dekorasi input seragam
   InputDecoration _buildInputDecoration({
     required String hint,
     required IconData icon,

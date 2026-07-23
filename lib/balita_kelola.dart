@@ -1,16 +1,23 @@
+// Menampilkan data balita yang ada dari database dan juga dapat
+// menambah, lihat detail, dan juga hapus data balita
+
+// Role yang dapat akses:
+// - Kader
+// - Bidan
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'tambah_balita_kader.dart';
-import 'detail_balita_kader.dart';
+import 'balita_tambah.dart';
+import 'balita_detail.dart';
 
-class KelolaBalitaScreen extends StatefulWidget {
-  const KelolaBalitaScreen({super.key});
+class KelolaBalita extends StatefulWidget {
+  const KelolaBalita({super.key});
 
   @override
-  State<KelolaBalitaScreen> createState() => _KelolaBalitaScreenState();
+  State<KelolaBalita> createState() => _KelolaBalitaState();
 }
 
-class _KelolaBalitaScreenState extends State<KelolaBalitaScreen> {
+class _KelolaBalitaState extends State<KelolaBalita> {
   String _searchQuery = '';
   bool _isAscending = true;
   final TextEditingController _searchController = TextEditingController();
@@ -134,7 +141,7 @@ class _KelolaBalitaScreenState extends State<KelolaBalitaScreen> {
         border: Border.all(color: Colors.grey.shade100),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -291,7 +298,7 @@ class _KelolaBalitaScreenState extends State<KelolaBalitaScreen> {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.blue.withOpacity(0.3),
+                              color: Colors.blue.withValues(alpha: 0.3),
                               blurRadius: 15,
                               offset: const Offset(0, 8),
                             ),
@@ -325,7 +332,9 @@ class _KelolaBalitaScreenState extends State<KelolaBalitaScreen> {
                                   Text(
                                     "Balita Terdaftar",
                                     style: TextStyle(
-                                      color: Colors.white.withOpacity(0.8),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.8,
+                                      ),
                                       fontSize: 12,
                                     ),
                                   ),
@@ -335,7 +344,7 @@ class _KelolaBalitaScreenState extends State<KelolaBalitaScreen> {
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
+                                color: Colors.white.withValues(alpha: 0.15),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -554,7 +563,9 @@ class _KelolaBalitaScreenState extends State<KelolaBalitaScreen> {
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.02),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.02,
+                                        ),
                                         blurRadius: 8,
                                         offset: const Offset(0, 2),
                                       ),
@@ -569,11 +580,10 @@ class _KelolaBalitaScreenState extends State<KelolaBalitaScreen> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) =>
-                                              DetailBalitaScreen(
-                                                docId: docId,
-                                                data: data,
-                                              ),
+                                          builder: (context) => DetailBalita(
+                                            docId: docId,
+                                            data: data,
+                                          ),
                                         ),
                                       );
                                     },
@@ -581,8 +591,8 @@ class _KelolaBalitaScreenState extends State<KelolaBalitaScreen> {
                                       radius: 24,
                                       backgroundColor:
                                           jenisKelamin == 'Laki-laki'
-                                          ? Colors.blue.withOpacity(0.15)
-                                          : Colors.pink.withOpacity(0.15),
+                                          ? Colors.blue.withValues(alpha: 0.15)
+                                          : Colors.pink.withValues(alpha: 0.15),
                                       backgroundImage:
                                           fotoUrl != null && fotoUrl.isNotEmpty
                                           ? NetworkImage(fotoUrl)
@@ -627,7 +637,9 @@ class _KelolaBalitaScreenState extends State<KelolaBalitaScreen> {
                                             vertical: 4,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: statusColor.withOpacity(0.1),
+                                            color: statusColor.withValues(
+                                              alpha: 0.1,
+                                            ),
                                             borderRadius: BorderRadius.circular(
                                               8,
                                             ),
@@ -703,7 +715,7 @@ class _KelolaBalitaScreenState extends State<KelolaBalitaScreen> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const TambahBalitaScreen()),
+            MaterialPageRoute(builder: (context) => const TambahBalita()),
           );
         },
         backgroundColor: Colors.blue,

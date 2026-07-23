@@ -6,7 +6,7 @@
 
 import 'package:flutter/material.dart';
 import 'beranda_bidan.dart';
-import 'bidan/riwayat_bidan.dart';
+import 'riwayat_pemeriksaan.dart';
 import 'profile.dart';
 
 class MainBidan extends StatefulWidget {
@@ -29,7 +29,7 @@ class _MainBidanState extends State<MainBidan> {
         body: TabBarView(
           children: [
             BerandaBidan(userId: widget.userId, fullName: widget.fullName),
-            const RiwayatBidan(),
+            const RiwayatPemeriksaan(role: 'bidan'),
             Profile(
               userId: widget.userId,
               fullName: widget.fullName,

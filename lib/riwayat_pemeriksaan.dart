@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class RiwayatKader extends StatefulWidget {
-  const RiwayatKader({super.key});
+class RiwayatPemeriksaan extends StatefulWidget {
+  // Tambahkan property role untuk menyesuaikan tema
+  final String role;
+
+  // Berikan default value 'kader' jika tidak di-pass (untuk kompatibilitas)
+  const RiwayatPemeriksaan({super.key, required this.role});
 
   @override
-  State<RiwayatKader> createState() => _RiwayatKaderState();
+  State<RiwayatPemeriksaan> createState() => _RiwayatPemeriksaanState();
 }
 
-class _RiwayatKaderState extends State<RiwayatKader> {
+class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
   DateTime? _selectedDate;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -45,6 +49,18 @@ class _RiwayatKaderState extends State<RiwayatKader> {
     });
   }
 
+  // Helper untuk mendapatkan warna tema berdasarkan role
+  Color get _themeColor {
+    return widget.role == 'bidan' ? Colors.purple : Colors.blue;
+  }
+
+  // Helper untuk mendapatkan warna background sekunder berdasarkan role
+  Color get _themeLightColor {
+    return widget.role == 'bidan'
+        ? const Color(0xFFF3E5F5)
+        : const Color(0xFFE3F2FD); // purple[50] : blue[50]
+  }
+
   Future<void> _pilihTanggal(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -54,8 +70,8 @@ class _RiwayatKaderState extends State<RiwayatKader> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Colors.blue,
+            colorScheme: ColorScheme.light(
+              primary: _themeColor, // Gunakan warna tema
               onPrimary: Colors.white,
               onSurface: Colors.black,
             ),
@@ -64,7 +80,6 @@ class _RiwayatKaderState extends State<RiwayatKader> {
         );
       },
     );
-
     if (picked != null) {
       setState(() {
         _selectedDate = picked;
@@ -83,7 +98,7 @@ class _RiwayatKaderState extends State<RiwayatKader> {
       case 'pendek':
         return Colors.orange;
       default:
-        return Colors.blue;
+        return _themeColor; // Fallback ke warna tema
     }
   }
 
@@ -101,7 +116,7 @@ class _RiwayatKaderState extends State<RiwayatKader> {
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.blue,
+        backgroundColor: _themeColor, // Gunakan warna tema
         elevation: 0,
       ),
       body: Column(
@@ -203,8 +218,9 @@ class _RiwayatKaderState extends State<RiwayatKader> {
                       icon: const Icon(Icons.calendar_month, size: 18),
                       label: const Text("Pilih Hari"),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE3F2FD),
-                        foregroundColor: Colors.blue,
+                        backgroundColor:
+                            _themeLightColor, // Gunakan warna light tema
+                        foregroundColor: _themeColor, // Gunakan warna tema
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -222,7 +238,7 @@ class _RiwayatKaderState extends State<RiwayatKader> {
                   ? FirebaseFirestore.instance
                         .collection('pemeriksaan')
                         .orderBy('tanggal', descending: true)
-                        .limit(20)
+                        .limit(50) // Menyamakan dengan riwayat bidan
                         .snapshots()
                   : FirebaseFirestore.instance
                         .collection('pemeriksaan')
@@ -256,9 +272,10 @@ class _RiwayatKaderState extends State<RiwayatKader> {
                         .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Center(
+                    child: CircularProgressIndicator(color: _themeColor),
+                  );
                 }
-
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                   return Center(
                     child: Column(
@@ -267,7 +284,7 @@ class _RiwayatKaderState extends State<RiwayatKader> {
                         Icon(
                           Icons.inbox_rounded,
                           size: 64,
-                          color: Colors.grey.withOpacity(0.5),
+                          color: Colors.grey.withValues(alpha: 0.5),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -284,7 +301,6 @@ class _RiwayatKaderState extends State<RiwayatKader> {
                     ),
                   );
                 }
-
                 var rawDocs = snapshot.data!.docs;
                 var filteredDocs = rawDocs.where((doc) {
                   var data = doc.data() as Map<String, dynamic>;
@@ -293,7 +309,6 @@ class _RiwayatKaderState extends State<RiwayatKader> {
                       .toLowerCase();
                   return nama.contains(_searchQuery.toLowerCase());
                 }).toList();
-
                 if (filteredDocs.isEmpty) {
                   return Center(
                     child: Column(
@@ -302,7 +317,7 @@ class _RiwayatKaderState extends State<RiwayatKader> {
                         Icon(
                           Icons.search_off_rounded,
                           size: 64,
-                          color: Colors.grey.withOpacity(0.5),
+                          color: Colors.grey.withValues(alpha: 0.5),
                         ),
                         const SizedBox(height: 16),
                         const Text(
@@ -317,7 +332,6 @@ class _RiwayatKaderState extends State<RiwayatKader> {
                     ),
                   );
                 }
-
                 return ListView.builder(
                   padding: const EdgeInsets.all(20),
                   itemCount: filteredDocs.length,
@@ -333,7 +347,6 @@ class _RiwayatKaderState extends State<RiwayatKader> {
                     String infoWaktu = _selectedDate == null
                         ? "${waktu.day} ${_namaBulan[waktu.month]}   ${waktu.hour.toString().padLeft(2, '0')}:${waktu.minute.toString().padLeft(2, '0')}"
                         : "${waktu.hour.toString().padLeft(2, '0')}:${waktu.minute.toString().padLeft(2, '0')}";
-
                     return Container(
                       margin: const EdgeInsets.only(bottom: 16),
                       padding: const EdgeInsets.all(16),
@@ -342,7 +355,7 @@ class _RiwayatKaderState extends State<RiwayatKader> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.02),
+                            color: Colors.black.withValues(alpha: 0.02),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -364,15 +377,13 @@ class _RiwayatKaderState extends State<RiwayatKader> {
                                         as Map<String, dynamic>;
                                 fotoUrl = balitaData['fotoUrl'];
                               }
-
                               return Container(
-                                width:
-                                    48, // Menyamakan ukuran dengan desain lama (padding 12x2 + icon 24)
+                                width: 48,
                                 height: 48,
                                 decoration: BoxDecoration(
                                   color: _getStatusColor(
                                     status,
-                                  ).withOpacity(0.1),
+                                  ).withValues(alpha: 0.1),
                                   shape: BoxShape.circle,
                                   image: fotoUrl != null && fotoUrl.isNotEmpty
                                       ? DecorationImage(

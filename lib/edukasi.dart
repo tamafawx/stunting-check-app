@@ -1,7 +1,7 @@
 // Menampilkan halaman edukasi yang tersedia dan juga dapat dibaca
 // nantinya pada halaman detail edukasi. Untuk tiap role ada juga
 // yang bisa menghapus konten edukasi secara keseluruhan (admin)
-// dan juga sendiri (kader dan bidan)
+// dan juga sendiri (kader dan bidan), sedangkan orang tua hanya membaca.
 
 // Role yang dapat akses:
 // - Admin
@@ -13,9 +13,19 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'edukasi_detail.dart';
+import 'edukasi_tambah.dart';
 
 class Edukasi extends StatefulWidget {
-  const Edukasi({super.key});
+  final String userId;
+  final String fullName;
+  final String role;
+
+  const Edukasi({
+    super.key,
+    required this.userId,
+    required this.fullName,
+    required this.role,
+  });
 
   @override
   State<Edukasi> createState() => _EdukasiState();
@@ -33,78 +43,98 @@ class _EdukasiState extends State<Edukasi> {
     super.dispose();
   }
 
-  Future<void> _hapusEdukasi(
+  void _hapusEdukasi(
     BuildContext context,
     String docId,
     String judul,
     String penulis,
-  ) async {
-    bool confirm =
-        await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: const Text('Konfirmasi Hapus (Admin)'),
-            content: Text(
-              'Apakah Anda yakin ingin menghapus materi edukasi "$judul" yang ditulis oleh $penulis?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text(
-                  'Batal',
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                ),
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Hapus Permanen'),
-              ),
-            ],
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-        ) ??
-        false;
-
-    if (confirm) {
-      try {
-        await FirebaseFirestore.instance
-            .collection('edukasi')
-            .doc(docId)
-            .delete();
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Edukasi "$judul" berhasil dihapus.'),
-              backgroundColor: Colors.green,
+          title: const Text(
+            "Konfirmasi Hapus",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            'Apakah Anda yakin ingin menghapus materi edukasi "$judul"?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Batal", style: TextStyle(color: Colors.grey)),
             ),
-          );
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Terjadi kesalahan saat menghapus edukasi.'),
-              backgroundColor: Colors.red,
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
+              ),
+              onPressed: () async {
+                Navigator.pop(context);
+                try {
+                  await FirebaseFirestore.instance
+                      .collection('edukasi')
+                      .doc(docId)
+                      .delete();
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Edukasi "$judul" berhasil dihapus.'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Terjadi kesalahan saat menghapus edukasi.',
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              child: const Text(
+                "Hapus",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
-          );
-        }
-      }
-    }
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    Color mainThemeColor = (widget.role == 'admin')
+        ? Colors.red
+        : (widget.role == 'kader')
+        ? Colors.blue
+        : (widget.role == 'bidan')
+        ? Colors.purple
+        : (widget.role == 'orang-tua')
+        ? Colors.green
+        : Colors.grey;
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text(
-          "Kelola Pojok Edukasi",
+          "Pojok Edukasi",
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -112,10 +142,30 @@ class _EdukasiState extends State<Edukasi> {
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.red,
+        backgroundColor: mainThemeColor,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
+      floatingActionButton: (widget.role != 'orang-tua')
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TambahEdukasi(
+                      userId: widget.userId,
+                      fullName: widget.fullName,
+                      role: widget.role,
+                    ),
+                  ),
+                );
+              },
+              backgroundColor: mainThemeColor,
+              foregroundColor: Colors.white,
+              elevation: 4,
+              child: const Icon(Icons.add),
+            )
+          : null,
       body: Column(
         children: [
           Container(
@@ -124,7 +174,7 @@ class _EdukasiState extends State<Edukasi> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: Colors.black.withValues(alpha: .05),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -185,9 +235,9 @@ class _EdukasiState extends State<Edukasi> {
                         DropdownButton<String>(
                           value: _selectedSort,
                           underline: const SizedBox(),
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.arrow_drop_down,
-                            color: Colors.red,
+                            color: mainThemeColor,
                           ),
                           style: const TextStyle(
                             color: Colors.black87,
@@ -216,7 +266,7 @@ class _EdukasiState extends State<Edukasi> {
                         _isListView
                             ? Icons.grid_view_rounded
                             : Icons.view_list_rounded,
-                        color: Colors.red,
+                        color: mainThemeColor,
                       ),
                       tooltip: 'Ubah Tampilan',
                       onPressed: () {
@@ -230,7 +280,6 @@ class _EdukasiState extends State<Edukasi> {
               ],
             ),
           ),
-
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
@@ -238,8 +287,8 @@ class _EdukasiState extends State<Edukasi> {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: Colors.red),
+                  return Center(
+                    child: CircularProgressIndicator(color: mainThemeColor),
                   );
                 }
                 if (snapshot.hasError) {
@@ -287,7 +336,6 @@ class _EdukasiState extends State<Edukasi> {
                         Timestamp.fromMillisecondsSinceEpoch(0);
                     return tB.compareTo(tA);
                   } else {
-                    // 'Terlama'
                     Timestamp tA =
                         dataA['createdAt'] ??
                         Timestamp.fromMillisecondsSinceEpoch(0);
@@ -312,37 +360,47 @@ class _EdukasiState extends State<Edukasi> {
 
                     String judul = data['judul'] ?? 'Tanpa Judul';
                     String namaPenulis = data['namaPenulis'] ?? 'Kader';
+                    String penulisId = data['penulisId'] ?? '';
                     String imageUrl = data['imageUrl'] ?? '';
                     String fotoPenulis = data['fotoPenulis'] ?? '';
-                    Timestamp? createdAt = data['createdAt'];
 
+                    Timestamp? createdAt = data['createdAt'];
                     String tanggal = '-';
                     if (createdAt != null) {
                       DateTime dt = createdAt.toDate();
                       tanggal = "${dt.day}/${dt.month}/${dt.year}";
                     }
 
+                    bool canDelete =
+                        (widget.role == 'admin') ||
+                        ((widget.role == 'kader' || widget.role == 'bidan') &&
+                            penulisId == widget.userId);
+
                     if (_isListView) {
                       return _buildHorizontalCard(
-                        context,
-                        data,
-                        docId,
-                        imageUrl,
-                        judul,
-                        namaPenulis,
-                        fotoPenulis,
-                        tanggal,
+                        context: context,
+                        data: data,
+                        docId: docId,
+                        imageUrl: imageUrl,
+                        judul: judul,
+                        namaPenulis: namaPenulis,
+                        fotoPenulis: fotoPenulis,
+                        tanggal: tanggal,
+                        canDelete: canDelete,
+                        themeColor: mainThemeColor,
                       );
                     } else {
                       return _buildVerticalCard(
-                        context,
-                        data,
-                        docId,
-                        imageUrl,
-                        judul,
-                        namaPenulis,
-                        fotoPenulis,
-                        tanggal,
+                        context: context,
+                        data: data,
+                        docId: docId,
+                        imageUrl: imageUrl,
+                        judul: judul,
+                        namaPenulis: namaPenulis,
+                        fotoPenulis: fotoPenulis,
+                        tanggal: tanggal,
+                        canDelete: canDelete,
+                        themeColor: mainThemeColor,
                       );
                     }
                   },
@@ -355,20 +413,22 @@ class _EdukasiState extends State<Edukasi> {
     );
   }
 
-  Widget _buildVerticalCard(
-    BuildContext context,
-    Map<String, dynamic> data,
-    String docId,
-    String imageUrl,
-    String judul,
-    String namaPenulis,
-    String fotoPenulis,
-    String tanggal,
-  ) {
+  Widget _buildVerticalCard({
+    required BuildContext context,
+    required Map<String, dynamic> data,
+    required String docId,
+    required String imageUrl,
+    required String judul,
+    required String namaPenulis,
+    required String fotoPenulis,
+    required String tanggal,
+    required bool canDelete,
+    required Color themeColor,
+  }) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
-      shadowColor: Colors.black.withValues(alpha: 0.1),
+      shadowColor: Colors.black.withValues(alpha: .1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -400,26 +460,27 @@ class _EdukasiState extends State<Edukasi> {
                         )
                       : const Icon(Icons.image, size: 50, color: Colors.grey),
                 ),
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: Material(
-                    color: Colors.white,
-                    shape: const CircleBorder(),
-                    elevation: 3,
-                    child: IconButton(
-                      constraints: const BoxConstraints(),
-                      padding: const EdgeInsets.all(8),
-                      icon: const Icon(
-                        Icons.delete_outline_rounded,
-                        color: Colors.red,
-                        size: 20,
+                if (canDelete)
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Material(
+                      color: Colors.white,
+                      shape: const CircleBorder(),
+                      elevation: 3,
+                      child: IconButton(
+                        constraints: const BoxConstraints(),
+                        padding: const EdgeInsets.all(8),
+                        icon: const Icon(
+                          Icons.delete_outline_rounded,
+                          color: Colors.redAccent,
+                          size: 20,
+                        ),
+                        onPressed: () =>
+                            _hapusEdukasi(context, docId, judul, namaPenulis),
                       ),
-                      onPressed: () =>
-                          _hapusEdukasi(context, docId, judul, namaPenulis),
                     ),
                   ),
-                ),
               ],
             ),
             Padding(
@@ -446,17 +507,15 @@ class _EdukasiState extends State<Edukasi> {
                           children: [
                             CircleAvatar(
                               radius: 12,
-                              backgroundColor: Colors.red.withValues(
-                                alpha: 0.2,
-                              ),
+                              backgroundColor: themeColor.withValues(alpha: .2),
                               backgroundImage: fotoPenulis.isNotEmpty
                                   ? NetworkImage(fotoPenulis)
                                   : null,
                               child: fotoPenulis.isEmpty
-                                  ? const Icon(
+                                  ? Icon(
                                       Icons.person,
                                       size: 14,
-                                      color: Colors.red,
+                                      color: themeColor,
                                     )
                                   : null,
                             ),
@@ -492,20 +551,22 @@ class _EdukasiState extends State<Edukasi> {
     );
   }
 
-  Widget _buildHorizontalCard(
-    BuildContext context,
-    Map<String, dynamic> data,
-    String docId,
-    String imageUrl,
-    String judul,
-    String namaPenulis,
-    String fotoPenulis,
-    String tanggal,
-  ) {
+  Widget _buildHorizontalCard({
+    required BuildContext context,
+    required Map<String, dynamic> data,
+    required String docId,
+    required String imageUrl,
+    required String judul,
+    required String namaPenulis,
+    required String fotoPenulis,
+    required String tanggal,
+    required bool canDelete,
+    required Color themeColor,
+  }) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
-      shadowColor: Colors.black.withValues(alpha: 0.1),
+      shadowColor: Colors.black.withValues(alpha: .1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -558,21 +619,25 @@ class _EdukasiState extends State<Edukasi> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          IconButton(
-                            constraints: const BoxConstraints(),
-                            padding: const EdgeInsets.only(left: 8, bottom: 4),
-                            icon: const Icon(
-                              Icons.delete_outline_rounded,
-                              color: Colors.red,
-                              size: 20,
+                          if (canDelete)
+                            IconButton(
+                              constraints: const BoxConstraints(),
+                              padding: const EdgeInsets.only(
+                                left: 8,
+                                bottom: 4,
+                              ),
+                              icon: const Icon(
+                                Icons.delete_outline_rounded,
+                                color: Colors.redAccent,
+                                size: 20,
+                              ),
+                              onPressed: () => _hapusEdukasi(
+                                context,
+                                docId,
+                                judul,
+                                namaPenulis,
+                              ),
                             ),
-                            onPressed: () => _hapusEdukasi(
-                              context,
-                              docId,
-                              judul,
-                              namaPenulis,
-                            ),
-                          ),
                         ],
                       ),
                       const Spacer(),
@@ -584,17 +649,17 @@ class _EdukasiState extends State<Edukasi> {
                               children: [
                                 CircleAvatar(
                                   radius: 10,
-                                  backgroundColor: Colors.red.withValues(
-                                    alpha: 0.2,
+                                  backgroundColor: themeColor.withValues(
+                                    alpha: .2,
                                   ),
                                   backgroundImage: fotoPenulis.isNotEmpty
                                       ? NetworkImage(fotoPenulis)
                                       : null,
                                   child: fotoPenulis.isEmpty
-                                      ? const Icon(
+                                      ? Icon(
                                           Icons.person,
                                           size: 12,
-                                          color: Colors.red,
+                                          color: themeColor,
                                         )
                                       : null,
                                 ),

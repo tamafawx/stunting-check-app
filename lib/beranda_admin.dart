@@ -216,8 +216,13 @@ class SummarySection extends StatelessWidget {
 
 class QuickMenuAccess extends StatelessWidget {
   final String userId;
+  final String fullName;
 
-  const QuickMenuAccess({super.key, required this.userId});
+  const QuickMenuAccess({
+    super.key,
+    required this.userId,
+    required this.fullName,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -286,7 +291,13 @@ class QuickMenuAccess extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const Edukasi()),
+                    MaterialPageRoute(
+                      builder: (context) => Edukasi(
+                        userId: userId,
+                        fullName: fullName,
+                        role: 'admin',
+                      ),
+                    ),
                   );
                 },
               ),
@@ -378,7 +389,7 @@ class BerandaAdmin extends StatelessWidget {
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsetsGeometry.directional(start: 16, end: 16),
-              child: QuickMenuAccess(userId: userId),
+              child: QuickMenuAccess(userId: userId, fullName: fullName),
             ),
             const SizedBox(height: 16),
           ],
