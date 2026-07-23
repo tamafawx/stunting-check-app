@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../beranda_admin.dart';
+import 'beranda_admin.dart';
 
-import '../login.dart';
+import 'login.dart';
 
 class MainAdmin extends StatefulWidget {
   final String userId;

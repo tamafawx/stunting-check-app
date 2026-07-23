@@ -4,10 +4,10 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
 import 'register.dart';
-import 'admin/main_admin.dart';
-import 'kader/main_kader.dart';
-import 'bidan/main_bidan.dart';
-import 'orang_tua/main_orang_tua.dart';
+import 'main_admin.dart';
+import 'main_kader.dart';
+import 'main_bidan.dart';
+import 'main_orang_tua.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});

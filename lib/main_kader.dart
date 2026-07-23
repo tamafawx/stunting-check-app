@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../beranda_kader.dart';
-import 'riwayat_kader.dart';
-import 'profile_kader.dart';
+import 'beranda_kader.dart';
+import 'kader/riwayat_kader.dart';
+import 'kader/profile_kader.dart';
 
 class MainKader extends StatefulWidget {
   final String userId;
@@ -31,7 +31,7 @@ class _MainKader extends State<MainKader> {
         bottomNavigationBar: TabBar(
           isScrollable: false,
           tabAlignment: TabAlignment.fill,
-          unselectedLabelColor: Colors.black.withOpacity(0.25),
+          unselectedLabelColor: Colors.black.withValues(alpha: .25),
           labelColor: Colors.blue,
           indicatorColor: Colors.blue,
           tabs: const [

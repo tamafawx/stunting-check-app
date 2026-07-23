@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 // Import Pages (Orang Tua)
-import '../beranda_orang_tua.dart';
+import 'beranda_orang_tua.dart';
 import '/orang_tua/profile_orang_tua.dart';
 import '/orang_tua/balita_orang_tua.dart';
 
@@ -19,7 +19,7 @@ class _MainOrangTuaState extends State<MainOrangTua> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3, // Diubah menjadi 3 tab: Beranda, Anak, dan Profil
+      length: 3,
       child: Scaffold(
         backgroundColor: Colors.white,
         body: TabBarView(
