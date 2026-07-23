@@ -13,6 +13,7 @@ import 'edukasi.dart';
 import 'edukasi_detail.dart';
 import 'balita.dart';
 import 'jadwal.dart';
+import 'notifikasi.dart';
 
 class UserHeaderSection extends StatelessWidget {
   final String userId;
@@ -24,19 +25,105 @@ class UserHeaderSection extends StatelessWidget {
     required this.fullName,
   });
 
+  Widget _buildNotification(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Notifikasi(userId: userId, role: 'orang-tua'),
+          ),
+        );
+      },
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.notifications_active_rounded,
+              color: Colors.white,
+              size: 26,
+            ),
+          ),
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('pengumuman')
+                .snapshots(),
+            builder: (context, snapshot) {
+              int unreadCount = 0;
+              if (snapshot.hasData) {
+                for (var doc in snapshot.data!.docs) {
+                  var data = doc.data() as Map<String, dynamic>;
+                  List<dynamic> readBy = data['readBy'] ?? [];
+                  if (!readBy.contains(userId)) {
+                    unreadCount++;
+                  }
+                }
+              }
+              if (unreadCount == 0) return const SizedBox();
+
+              return Positioned(
+                right: -2,
+                top: -2,
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.amberAccent,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.green.shade700, width: 2),
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 20,
+                    minHeight: 20,
+                  ),
+                  child: Text(
+                    unreadCount > 99 ? '99+' : unreadCount.toString(),
+                    style: TextStyle(
+                      color: Colors.green.shade900,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 60, 20, 30),
+      padding: const EdgeInsets.fromLTRB(24, 70, 24, 40),
       decoration: const BoxDecoration(
-        color: Colors.green,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
+        gradient: LinearGradient(
+          colors: [Color(0xFF388E3C), Color(0xFF66BB6A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(40),
+          bottomRight: Radius.circular(40),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x40388E3C),
+            blurRadius: 20,
+            offset: Offset(0, 10),
+          ),
+        ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           StreamBuilder<DocumentSnapshot>(
             stream: FirebaseFirestore.instance
@@ -49,26 +136,34 @@ class UserHeaderSection extends StatelessWidget {
                 var data = snapshot.data!.data() as Map<String, dynamic>;
                 profileUrl = data['profileUrl'];
               }
+
               return Container(
-                padding: const EdgeInsets.all(2),
-                decoration: const BoxDecoration(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
                 ),
                 child: CircleAvatar(
-                  radius: 28,
-                  backgroundColor: Colors.greenAccent,
+                  radius: 32,
+                  backgroundColor: Colors.greenAccent.shade100,
                   backgroundImage: profileUrl != null && profileUrl.isNotEmpty
                       ? NetworkImage(profileUrl)
                       : null,
                   child: profileUrl == null || profileUrl.isEmpty
-                      ? const Icon(Icons.person, color: Colors.white, size: 32)
+                      ? const Icon(Icons.person, color: Colors.white, size: 36)
                       : null,
                 ),
               );
             },
           ),
-          const SizedBox(width: 15),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,73 +172,55 @@ class UserHeaderSection extends StatelessWidget {
                 Text(
                   'Halo, selamat datang',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 14,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "$fullName 👋",
+                  fullName,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  'Orang Tua Balita',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: 13,
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Orang Tua Balita',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          _buildNotification(),
+          _buildNotification(context),
         ],
       ),
-    );
-  }
-
-  Widget _buildNotification() {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        const Icon(
-          Icons.notifications_none_outlined,
-          color: Colors.white,
-          size: 32,
-        ),
-        Positioned(
-          right: 2,
-          top: 2,
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: const BoxDecoration(
-              color: Color(0xFFEB5757),
-              shape: BoxShape.circle,
-            ),
-            constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-            child: const Text(
-              '1',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 9,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
 
 class SummarySection extends StatelessWidget {
   final String userId;
+
   const SummarySection({super.key, required this.userId});
 
   @override
@@ -158,41 +235,64 @@ class SummarySection extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
+              padding: EdgeInsets.all(20.0),
               child: CircularProgressIndicator(color: Colors.green),
             ),
           );
         }
+
         int totalAnak = snapshot.hasData ? snapshot.data!.docs.length : 0;
+
         return Container(
-          padding: const EdgeInsets.all(16.0),
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          transform: Matrix4.translationValues(0, -30, 0),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16.0),
+            borderRadius: BorderRadius.circular(24.0),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withValues(alpha: 0.05),
-                spreadRadius: 1,
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+                color: Colors.green.withValues(alpha: 0.15),
+                spreadRadius: 0,
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+          child: Stack(
             children: [
-              _buildSummaryItem(
-                icon: Icons.child_care_rounded,
-                color: Colors.green,
-                title: "Anak Terdaftar",
-                value: "$totalAnak",
+              Positioned(
+                right: -20,
+                bottom: -20,
+                child: Icon(
+                  Icons.family_restroom_rounded,
+                  size: 120,
+                  color: Colors.green.withValues(alpha: 0.05),
+                ),
               ),
-              Container(height: 40, width: 1, color: Colors.grey.shade200),
-              _buildSummaryItem(
-                icon: Icons.menu_book_rounded,
-                color: Colors.purple,
-                title: "Edukasi Gizi",
-                value: "Cek",
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildSummaryMetric(
+                      icon: Icons.child_care_rounded,
+                      label: "Anak Terdaftar",
+                      value: "$totalAnak",
+                      color: Colors.green,
+                    ),
+                    Container(
+                      height: 50,
+                      width: 1,
+                      color: Colors.grey.shade200,
+                    ),
+                    _buildSummaryMetric(
+                      icon: Icons.menu_book_rounded,
+                      label: "Edukasi Gizi",
+                      value: "Cek",
+                      color: Colors.purple,
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -201,42 +301,61 @@ class SummarySection extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryItem({
+  Widget _buildSummaryMetric({
     required IconData icon,
-    required Color color,
-    required String title,
+    required String label,
     required String value,
+    required Color color,
   }) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
+            borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: color, size: 24),
-        ),
-        const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.black54,
-                fontWeight: FontWeight.w500,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 14, color: color),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
               ),
-            ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
             Text(
               value,
               style: const TextStyle(
-                fontSize: 18,
+                fontSize: 32,
                 fontWeight: FontWeight.bold,
                 color: Colors.black87,
+                height: 1,
               ),
             ),
+            const SizedBox(width: 6),
+            if (value != "Cek")
+              const Text(
+                "Anak",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black54,
+                ),
+              ),
           ],
         ),
       ],
@@ -257,16 +376,17 @@ class QuickMenuAccess extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16.0),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(24.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             spreadRadius: 1,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -277,12 +397,12 @@ class QuickMenuAccess extends StatelessWidget {
           const Text(
             "Quick Access (Menu Cepat)",
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
@@ -292,22 +412,21 @@ class QuickMenuAccess extends StatelessWidget {
                 _buildMenuItem(
                   icon: Icons.child_care_rounded,
                   color: Colors.green,
-                  label: "Data Balita",
+                  label: "Data\nBalita",
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            BalitaOrangTuaScreen(userId: userId),
+                        builder: (context) => Balita(userId: userId),
                       ),
                     );
                   },
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 16),
                 _buildMenuItem(
                   icon: Icons.calendar_month_rounded,
                   color: Colors.orange,
-                  label: "Jadwal",
+                  label: "Jadwal\nPosyandu",
                   onTap: () {
                     Navigator.push(
                       context,
@@ -315,7 +434,7 @@ class QuickMenuAccess extends StatelessWidget {
                     );
                   },
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 16),
                 _buildMenuItem(
                   icon: Icons.menu_book_rounded,
                   color: Colors.purple,
@@ -333,11 +452,11 @@ class QuickMenuAccess extends StatelessWidget {
                     );
                   },
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 16),
                 _buildMenuItem(
                   icon: Icons.chat_bubble_rounded,
                   color: Colors.redAccent,
-                  label: "Konsultasi",
+                  label: "Konsultasi\nBidan",
                   onTap: () {
                     Navigator.push(
                       context,
@@ -365,7 +484,7 @@ class QuickMenuAccess extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return SizedBox(
-      width: 75,
+      width: 72,
       child: Column(
         children: [
           Material(
@@ -374,8 +493,8 @@ class QuickMenuAccess extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               onTap: onTap,
               child: Container(
-                width: 60,
-                height: 60,
+                width: 64,
+                height: 64,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
@@ -384,13 +503,13 @@ class QuickMenuAccess extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Text(
             label,
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
               color: Colors.black87,
               height: 1.25,
             ),
@@ -405,6 +524,7 @@ class QuickMenuAccess extends StatelessWidget {
 
 class DaftarAnakSection extends StatelessWidget {
   final String userId;
+
   const DaftarAnakSection({super.key, required this.userId});
 
   String _calculateAge(dynamic birthDateData) {
@@ -443,16 +563,17 @@ class DaftarAnakSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16.0),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(24.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             spreadRadius: 1,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -465,7 +586,7 @@ class DaftarAnakSection extends StatelessWidget {
               const Text(
                 "Anak Saya",
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
@@ -475,8 +596,7 @@ class DaftarAnakSection extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          BalitaOrangTuaScreen(userId: userId),
+                      builder: (context) => Balita(userId: userId),
                     ),
                   );
                 },
@@ -491,7 +611,7 @@ class DaftarAnakSection extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('balita')
@@ -502,7 +622,10 @@ class DaftarAnakSection extends StatelessWidget {
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(
-                  child: CircularProgressIndicator(color: Colors.green),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: CircularProgressIndicator(color: Colors.green),
+                  ),
                 );
               }
               if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -526,10 +649,10 @@ class DaftarAnakSection extends StatelessWidget {
                   ),
                 );
               }
-
               var listBalita = snapshot.data!.docs;
+
               return ListView.builder(
-                padding: const EdgeInsets.only(top: 10),
+                padding: EdgeInsets.zero,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: listBalita.length,
@@ -542,31 +665,30 @@ class DaftarAnakSection extends StatelessWidget {
                   String? fotoUrl = data['fotoUrl'];
 
                   return Container(
-                    margin: const EdgeInsets.only(bottom: 8.0),
+                    margin: const EdgeInsets.only(bottom: 12.0),
                     decoration: BoxDecoration(
-                      color: Colors.grey[50],
-                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.shade100),
                     ),
                     child: ListTile(
-                      dense: true,
                       contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 0,
+                        horizontal: 16,
+                        vertical: 8,
                       ),
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                BalitaOrangTuaScreen(userId: userId),
+                            builder: (context) => Balita(userId: userId),
                           ),
                         );
                       },
                       leading: CircleAvatar(
                         radius: 20,
                         backgroundColor: jenisKelamin == 'Laki-laki'
-                            ? Colors.blue.withValues(alpha: 0.1)
-                            : Colors.pink.withValues(alpha: 0.1),
+                            ? Colors.blue.withValues(alpha: 0.15)
+                            : Colors.pink.withValues(alpha: 0.15),
                         backgroundImage: fotoUrl != null && fotoUrl.isNotEmpty
                             ? NetworkImage(fotoUrl)
                             : null,
@@ -585,21 +707,25 @@ class DaftarAnakSection extends StatelessWidget {
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
+                          color: Colors.black87,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      subtitle: Text(
-                        "Usia: $usia",
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Colors.black54,
+                      subtitle: Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Text(
+                          "Usia: $usia",
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black54,
+                          ),
                         ),
                       ),
-                      trailing: Icon(
+                      trailing: const Icon(
                         Icons.arrow_forward_ios_rounded,
                         size: 14,
-                        color: Colors.grey[400],
+                        color: Colors.grey,
                       ),
                     ),
                   );
@@ -618,21 +744,21 @@ class JadwalMendatangSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Ambil awal hari ini (jam 00:00:00) agar jadwal hari ini tetap muncul
     DateTime now = DateTime.now();
     DateTime startOfToday = DateTime(now.year, now.month, now.day);
 
     return Container(
-      padding: const EdgeInsets.all(16.0),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(24.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             spreadRadius: 1,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -645,7 +771,7 @@ class JadwalMendatangSection extends StatelessWidget {
               const Text(
                 "Jadwal Mendatang",
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
@@ -668,7 +794,7 @@ class JadwalMendatangSection extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('jadwal')
@@ -677,7 +803,7 @@ class JadwalMendatangSection extends StatelessWidget {
                   isGreaterThanOrEqualTo: Timestamp.fromDate(startOfToday),
                 )
                 .orderBy('tanggal')
-                .limit(2) // Menampilkan maksimal 2 jadwal terdekat
+                .limit(2)
                 .snapshots(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -699,8 +825,8 @@ class JadwalMendatangSection extends StatelessWidget {
                   ),
                 );
               }
-
               var listJadwal = snapshot.data!.docs;
+
               return ListView.builder(
                 padding: EdgeInsets.zero,
                 shrinkWrap: true,
@@ -713,36 +839,35 @@ class JadwalMendatangSection extends StatelessWidget {
                   String lokasi = data['lokasi'] ?? '-';
                   Timestamp? tanggalTs = data['tanggal'];
                   DateTime tanggal = tanggalTs?.toDate() ?? DateTime.now();
-
                   String formattedDate = DateFormat(
                     'dd MMM yyyy',
                   ).format(tanggal);
 
                   return Container(
-                    margin: const EdgeInsets.only(bottom: 8.0),
-                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 12.0),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.orange.shade50,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: Colors.orange.shade100),
                     ),
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
                             kategori == 'Posyandu'
                                 ? Icons.group_rounded
                                 : Icons.vaccines_rounded,
                             color: Colors.orange,
-                            size: 24,
+                            size: 28,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 16),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -751,40 +876,40 @@ class JadwalMendatangSection extends StatelessWidget {
                                 judul,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                                  fontSize: 15,
                                   color: Colors.black87,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 6),
                               Row(
                                 children: [
                                   Icon(
                                     Icons.calendar_today_rounded,
-                                    size: 12,
+                                    size: 14,
                                     color: Colors.grey[600],
                                   ),
-                                  const SizedBox(width: 4),
+                                  const SizedBox(width: 6),
                                   Text(
                                     formattedDate,
                                     style: TextStyle(
-                                      fontSize: 11,
+                                      fontSize: 12,
                                       color: Colors.grey[600],
                                     ),
                                   ),
                                   const SizedBox(width: 12),
                                   Icon(
                                     Icons.location_on_rounded,
-                                    size: 12,
+                                    size: 14,
                                     color: Colors.grey[600],
                                   ),
-                                  const SizedBox(width: 4),
+                                  const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
                                       lokasi,
                                       style: TextStyle(
-                                        fontSize: 11,
+                                        fontSize: 12,
                                         color: Colors.grey[600],
                                       ),
                                       maxLines: 1,
@@ -812,6 +937,7 @@ class JadwalMendatangSection extends StatelessWidget {
 class ArtikelTerbaruSection extends StatelessWidget {
   final String userId;
   final String fullName;
+
   const ArtikelTerbaruSection({
     super.key,
     required this.userId,
@@ -821,16 +947,17 @@ class ArtikelTerbaruSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16.0),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(24.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             spreadRadius: 1,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -843,7 +970,7 @@ class ArtikelTerbaruSection extends StatelessWidget {
               const Text(
                 "Artikel Terbaru",
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
@@ -872,7 +999,7 @@ class ArtikelTerbaruSection extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('edukasi')
@@ -899,8 +1026,8 @@ class ArtikelTerbaruSection extends StatelessWidget {
                   ),
                 );
               }
-
               var listArtikel = snapshot.data!.docs;
+
               return ListView.builder(
                 padding: EdgeInsets.zero,
                 shrinkWrap: true,
@@ -913,7 +1040,6 @@ class ArtikelTerbaruSection extends StatelessWidget {
                   String imageUrl = data['imageUrl'] ?? '';
                   Timestamp? createdAt = data['createdAt'];
                   String tanggal = '-';
-
                   if (createdAt != null) {
                     DateTime dt = createdAt.toDate();
                     tanggal = "${dt.day}/${dt.month}/${dt.year}";
@@ -929,15 +1055,16 @@ class ArtikelTerbaruSection extends StatelessWidget {
                         ),
                       );
                     },
+                    borderRadius: BorderRadius.circular(16),
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 12.0),
                       child: Row(
                         children: [
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(12),
                             child: Container(
-                              width: 70,
-                              height: 70,
+                              width: 80,
+                              height: 80,
                               color: Colors.grey[200],
                               child: imageUrl.isNotEmpty
                                   ? Image.network(
@@ -953,7 +1080,7 @@ class ArtikelTerbaruSection extends StatelessWidget {
                                   : const Icon(Icons.image, color: Colors.grey),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -962,25 +1089,25 @@ class ArtikelTerbaruSection extends StatelessWidget {
                                   judul,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 14,
+                                    fontSize: 15,
                                     color: Colors.black87,
                                   ),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 6),
+                                const SizedBox(height: 8),
                                 Row(
                                   children: [
                                     Icon(
                                       Icons.calendar_today_rounded,
-                                      size: 12,
+                                      size: 14,
                                       color: Colors.grey[500],
                                     ),
-                                    const SizedBox(width: 4),
+                                    const SizedBox(width: 6),
                                     Text(
                                       tanggal,
                                       style: TextStyle(
-                                        fontSize: 11,
+                                        fontSize: 12,
                                         color: Colors.grey[500],
                                       ),
                                     ),
@@ -1016,39 +1143,39 @@ class BerandaOrangTua extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[50],
+      backgroundColor: const Color(0xFFF8F9FA),
       body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
+        physics: const ClampingScrollPhysics(),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             UserHeaderSection(userId: userId, fullName: fullName),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: SummarySection(userId: userId),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: QuickMenuAccess(userId: userId, fullName: fullName),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: DaftarAnakSection(userId: userId),
             ),
-            const SizedBox(height: 16),
-            // Penambahan Widget Jadwal Mendatang
+            const SizedBox(height: 20),
             const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(horizontal: 20),
               child: JadwalMendatangSection(),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: ArtikelTerbaruSection(userId: userId, fullName: fullName),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 40),
           ],
         ),
       ),

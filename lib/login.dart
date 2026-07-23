@@ -152,7 +152,7 @@ class _LoginState extends State<Login> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Icon(
-                Icons.health_and_safety,
+                Icons.health_and_safety_rounded,
                 size: 80,
                 color: Colors.green,
               ),
@@ -168,7 +168,7 @@ class _LoginState extends State<Login> {
               ),
               const SizedBox(height: 8),
               const Text(
-                "Sign in to continue",
+                "Masuk untuk melanjutkan",
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: Colors.black54),
               ),
@@ -177,9 +177,16 @@ class _LoginState extends State<Login> {
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.email_outlined),
+                  prefixIcon: const Icon(
+                    Icons.email_outlined,
+                    color: Colors.green,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.green, width: 2),
                   ),
                   labelText: 'Email',
                   filled: true,
@@ -191,12 +198,16 @@ class _LoginState extends State<Login> {
                 controller: _passwordController,
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.lock_outline),
+                  prefixIcon: const Icon(
+                    Icons.lock_outline_rounded,
+                    color: Colors.green,
+                  ),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
                           ? Icons.visibility_off
                           : Icons.visibility,
+                      color: Colors.grey,
                     ),
                     onPressed: () {
                       setState(() {
@@ -206,6 +217,10 @@ class _LoginState extends State<Login> {
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.green, width: 2),
                   ),
                   labelText: 'Password',
                   filled: true,
@@ -234,7 +249,7 @@ class _LoginState extends State<Login> {
                         ),
                       )
                     : const Text(
-                        'Login',
+                        'Masuk',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -259,7 +274,7 @@ class _LoginState extends State<Login> {
                       );
                     },
                     child: const Text(
-                      "Buat Akun",
+                      "Daftar Sekarang",
                       style: TextStyle(
                         color: Colors.green,
                         fontWeight: FontWeight.bold,

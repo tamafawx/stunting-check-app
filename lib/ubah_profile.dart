@@ -8,17 +8,18 @@
 // - Orang Tua
 
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:crypto/crypto.dart';
 
 class UbahProfile extends StatefulWidget {
   final String userId;
   final String role;
   const UbahProfile({super.key, required this.userId, required this.role});
-
   @override
   State<UbahProfile> createState() => _UbahProfilState();
 }
@@ -27,9 +28,10 @@ class _UbahProfilState extends State<UbahProfile> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _namaController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-
+  final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _isFetching = true;
+  bool _obscurePassword = true;
   File? _imageFile;
   String? _currentImageUrl;
   late String _role = '';
@@ -49,7 +51,6 @@ class _UbahProfilState extends State<UbahProfile> {
           .collection('users')
           .doc(widget.userId)
           .get();
-
       if (userDoc.exists) {
         Map<String, dynamic> data = userDoc.data() as Map<String, dynamic>;
         setState(() {
@@ -109,7 +110,6 @@ class _UbahProfilState extends State<UbahProfile> {
         : (_role == 'orang-tua')
         ? Colors.green
         : Colors.grey;
-
     try {
       final CroppedFile? croppedFile = await ImageCropper().cropImage(
         sourcePath: path,
@@ -126,7 +126,6 @@ class _UbahProfilState extends State<UbahProfile> {
           IOSUiSettings(title: 'Sesuaikan Foto', aspectRatioLockEnabled: true),
         ],
       );
-
       if (croppedFile != null) {
         setState(() {
           _imageFile = File(croppedFile.path);
@@ -282,7 +281,6 @@ class _UbahProfilState extends State<UbahProfile> {
       setState(() => _isLoading = true);
       try {
         String? newProfileUrl = _currentImageUrl;
-
         if (_isImageDeleted) {
           newProfileUrl = null;
           try {
@@ -296,15 +294,23 @@ class _UbahProfilState extends State<UbahProfile> {
           newProfileUrl = await _uploadImage();
         }
 
+        Map<String, dynamic> updateData = {
+          'fullName': _namaController.text.trim(),
+          'email': _emailController.text.trim(),
+          'profileUrl': newProfileUrl,
+          'updatedAt': FieldValue.serverTimestamp(),
+        };
+
+        if (_passwordController.text.isNotEmpty) {
+          var bytes = utf8.encode(_passwordController.text);
+          var digest = sha256.convert(bytes);
+          updateData['password'] = digest.toString();
+        }
+
         await FirebaseFirestore.instance
             .collection('users')
             .doc(widget.userId)
-            .update({
-              'fullName': _namaController.text.trim(),
-              'email': _emailController.text.trim(),
-              'profileUrl': newProfileUrl,
-              'updatedAt': FieldValue.serverTimestamp(),
-            });
+            .update(updateData);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -334,6 +340,7 @@ class _UbahProfilState extends State<UbahProfile> {
   void dispose() {
     _namaController.dispose();
     _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -348,7 +355,6 @@ class _UbahProfilState extends State<UbahProfile> {
         : (_role == 'orang-tua')
         ? Colors.green
         : Colors.grey;
-
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -423,7 +429,6 @@ class _UbahProfilState extends State<UbahProfile> {
                                       )
                                     : null,
                               ),
-
                               Positioned(
                                 bottom: 0,
                                 right: 0,
@@ -454,7 +459,6 @@ class _UbahProfilState extends State<UbahProfile> {
                       ],
                     ),
                     const SizedBox(height: 24),
-
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Column(
@@ -515,11 +519,45 @@ class _UbahProfilState extends State<UbahProfile> {
                                     return null;
                                   },
                                 ),
+                                const Divider(
+                                  height: 1,
+                                  indent: 56,
+                                  endIndent: 16,
+                                  color: Color(0xFFF1F5F9),
+                                ),
+                                _buildTextFieldRow(
+                                  controller: _passwordController,
+                                  icon: Icons.lock_outline_rounded,
+                                  hint: "Password Baru (Opsional)",
+                                  themeColor: mainThemeColor,
+                                  obscureText: _obscurePassword,
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscurePassword
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
+                                      color: Colors.grey,
+                                      size: 20,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscurePassword = !_obscurePassword;
+                                      });
+                                    },
+                                  ),
+                                  validator: (value) {
+                                    if (value != null &&
+                                        value.isNotEmpty &&
+                                        value.length < 6) {
+                                      return 'Password minimal 6 karakter';
+                                    }
+                                    return null;
+                                  },
+                                ),
                               ],
                             ),
                           ),
                           const SizedBox(height: 32),
-
                           const Text(
                             "TINDAKAN",
                             style: TextStyle(
@@ -580,6 +618,8 @@ class _UbahProfilState extends State<UbahProfile> {
     TextInputType? keyboardType,
     String? validatorMsg,
     String? Function(String?)? validator,
+    bool obscureText = false,
+    Widget? suffixIcon,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -599,6 +639,7 @@ class _UbahProfilState extends State<UbahProfile> {
             child: TextFormField(
               controller: controller,
               keyboardType: keyboardType,
+              obscureText: obscureText,
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
@@ -606,6 +647,7 @@ class _UbahProfilState extends State<UbahProfile> {
               ),
               decoration: InputDecoration(
                 hintText: hint,
+                suffixIcon: suffixIcon,
                 hintStyle: const TextStyle(
                   color: Color(0xFF94A3B8),
                   fontWeight: FontWeight.w400,

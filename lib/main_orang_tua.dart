@@ -31,7 +31,7 @@ class _MainOrangTuaState extends State<MainOrangTua> {
         body: TabBarView(
           children: [
             BerandaOrangTua(fullName: widget.fullName, userId: widget.userId),
-            BalitaOrangTuaScreen(userId: widget.userId), // Tab Anak di tengah
+            Balita(userId: widget.userId), // Tab Anak di tengah
             Profile(
               userId: widget.userId,
               fullName: widget.fullName,
