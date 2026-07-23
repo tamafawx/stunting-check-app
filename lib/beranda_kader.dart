@@ -336,7 +336,7 @@ class QuickMenuAccess extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const KelolaBalita(),
+                      builder: (context) => const KelolaBalita(role: 'kader'),
                     ),
                   );
                 },
@@ -510,7 +510,7 @@ class LiveToddlersSection extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const KelolaBalita(),
+                      builder: (context) => const KelolaBalita(role: 'kader'),
                     ),
                   );
                 },
@@ -592,8 +592,11 @@ class LiveToddlersSection extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                DetailBalita(docId: doc.id, data: data),
+                            builder: (context) => DetailBalita(
+                              docId: doc.id,
+                              data: data,
+                              role: 'kader',
+                            ),
                           ),
                         );
                       },

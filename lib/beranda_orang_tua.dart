@@ -7,11 +7,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+
 import 'package:flutter_stunting_posyandu/orang_tua/konsultasi_orang_tua.dart';
-import 'orang_tua/edukasi_orang_tua.dart';
-import 'orang_tua/detail_edukasi_orang_tua.dart';
-import 'orang_tua/balita_orang_tua.dart';
-import 'orang_tua/jadwal_orang_tua.dart'; // Import Jadwal
+import 'edukasi.dart';
+import 'edukasi_detail.dart';
+import 'balita.dart';
+import 'jadwal.dart';
 
 class UserHeaderSection extends StatelessWidget {
   final String userId;
@@ -76,7 +77,7 @@ class UserHeaderSection extends StatelessWidget {
                 Text(
                   'Halo, selamat datang',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 14,
                   ),
                 ),
@@ -93,7 +94,7 @@ class UserHeaderSection extends StatelessWidget {
                 Text(
                   'Orang Tua Balita',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 13,
                   ),
                 ),
@@ -170,7 +171,7 @@ class SummarySection extends StatelessWidget {
             borderRadius: BorderRadius.circular(16.0),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.05),
+                color: Colors.grey.withValues(alpha: 0.05),
                 spreadRadius: 1,
                 blurRadius: 10,
                 offset: const Offset(0, 4),
@@ -211,7 +212,7 @@ class SummarySection extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 24),
@@ -262,7 +263,7 @@ class QuickMenuAccess extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
+            color: Colors.grey.withValues(alpha: 0.05),
             spreadRadius: 1,
             blurRadius: 10,
             offset: const Offset(0, 4),
@@ -310,9 +311,7 @@ class QuickMenuAccess extends StatelessWidget {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => const JadwalOrangTuaScreen(),
-                      ),
+                      MaterialPageRoute(builder: (context) => const Jadwal()),
                     );
                   },
                 ),
@@ -325,7 +324,11 @@ class QuickMenuAccess extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const EdukasiOrangTuaScreen(),
+                        builder: (context) => Edukasi(
+                          userId: userId,
+                          fullName: fullName,
+                          role: 'orang-tua',
+                        ),
                       ),
                     );
                   },
@@ -374,7 +377,7 @@ class QuickMenuAccess extends StatelessWidget {
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(icon, color: color, size: 30),
@@ -446,7 +449,7 @@ class DaftarAnakSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
+            color: Colors.grey.withValues(alpha: 0.05),
             spreadRadius: 1,
             blurRadius: 10,
             offset: const Offset(0, 4),
@@ -562,8 +565,8 @@ class DaftarAnakSection extends StatelessWidget {
                       leading: CircleAvatar(
                         radius: 20,
                         backgroundColor: jenisKelamin == 'Laki-laki'
-                            ? Colors.blue.withOpacity(0.1)
-                            : Colors.pink.withOpacity(0.1),
+                            ? Colors.blue.withValues(alpha: 0.1)
+                            : Colors.pink.withValues(alpha: 0.1),
                         backgroundImage: fotoUrl != null && fotoUrl.isNotEmpty
                             ? NetworkImage(fotoUrl)
                             : null,
@@ -626,7 +629,7 @@ class JadwalMendatangSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
+            color: Colors.grey.withValues(alpha: 0.05),
             spreadRadius: 1,
             blurRadius: 10,
             offset: const Offset(0, 4),
@@ -651,9 +654,7 @@ class JadwalMendatangSection extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => const JadwalOrangTuaScreen(),
-                    ),
+                    MaterialPageRoute(builder: (context) => const Jadwal()),
                   );
                 },
                 child: const Text(
@@ -809,7 +810,13 @@ class JadwalMendatangSection extends StatelessWidget {
 }
 
 class ArtikelTerbaruSection extends StatelessWidget {
-  const ArtikelTerbaruSection({super.key});
+  final String userId;
+  final String fullName;
+  const ArtikelTerbaruSection({
+    super.key,
+    required this.userId,
+    required this.fullName,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -820,7 +827,7 @@ class ArtikelTerbaruSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
+            color: Colors.grey.withValues(alpha: 0.05),
             spreadRadius: 1,
             blurRadius: 10,
             offset: const Offset(0, 4),
@@ -846,7 +853,11 @@ class ArtikelTerbaruSection extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const EdukasiOrangTuaScreen(),
+                      builder: (context) => Edukasi(
+                        userId: userId,
+                        fullName: fullName,
+                        role: 'orang-tua',
+                      ),
                     ),
                   );
                 },
@@ -914,7 +925,7 @@ class ArtikelTerbaruSection extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
-                              DetailEdukasiOrangTuaScreen(data: data),
+                              DetailEdukasi(data: data, role: 'orang-tua'),
                         ),
                       );
                     },
@@ -1033,9 +1044,9 @@ class BerandaOrangTua extends StatelessWidget {
               child: JadwalMendatangSection(),
             ),
             const SizedBox(height: 16),
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
-              child: ArtikelTerbaruSection(),
+              child: ArtikelTerbaruSection(userId: userId, fullName: fullName),
             ),
             const SizedBox(height: 24),
           ],

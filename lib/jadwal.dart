@@ -2,15 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
-class JadwalOrangTuaScreen extends StatefulWidget {
-  const JadwalOrangTuaScreen({super.key});
+class Jadwal extends StatefulWidget {
+  const Jadwal({super.key});
 
   @override
-  State<JadwalOrangTuaScreen> createState() => _JadwalOrangTuaScreenState();
+  State<Jadwal> createState() => _JadwalState();
 }
 
-class _JadwalOrangTuaScreenState extends State<JadwalOrangTuaScreen>
-    with SingleTickerProviderStateMixin {
+class _JadwalState extends State<Jadwal> with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override

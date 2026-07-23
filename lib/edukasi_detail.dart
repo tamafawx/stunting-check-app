@@ -3,8 +3,19 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DetailEdukasi extends StatelessWidget {
   final Map<String, dynamic> data;
+  final String role;
 
-  const DetailEdukasi({super.key, required this.data});
+  const DetailEdukasi({super.key, required this.data, required this.role});
+
+  Color get themeColor => (role.toLowerCase() == 'admin')
+      ? Colors.red
+      : (role.toLowerCase() == 'kader')
+      ? Colors.blue
+      : (role.toLowerCase() == 'bidan')
+      ? Colors.purple
+      : (role.toLowerCase() == 'orang-tua')
+      ? Colors.green
+      : Colors.grey;
 
   @override
   Widget build(BuildContext context) {
@@ -66,8 +77,12 @@ class DetailEdukasi extends StatelessWidget {
               Container(
                 width: double.infinity,
                 height: 300,
-                color: Colors.red[100],
-                child: Icon(Icons.menu_book, size: 80, color: Colors.red[300]),
+                color: themeColor.withValues(alpha: 0.1),
+                child: Icon(
+                  Icons.menu_book,
+                  size: 80,
+                  color: themeColor.withValues(alpha: 0.3),
+                ),
               ),
             Container(
               transform: Matrix4.translationValues(0.0, -30.0, 0.0),
@@ -103,12 +118,12 @@ class DetailEdukasi extends StatelessWidget {
                       children: [
                         CircleAvatar(
                           radius: 20,
-                          backgroundColor: Colors.red.withValues(alpha: 0.1),
+                          backgroundColor: themeColor.withValues(alpha: 0.1),
                           backgroundImage: fotoPenulis.isNotEmpty
                               ? NetworkImage(fotoPenulis)
                               : null,
                           child: fotoPenulis.isEmpty
-                              ? const Icon(Icons.person, color: Colors.red)
+                              ? Icon(Icons.person, color: themeColor)
                               : null,
                         ),
                         const SizedBox(width: 12),
@@ -145,10 +160,10 @@ class DetailEdukasi extends StatelessWidget {
                             ),
                             Text(
                               tanggal,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
-                                color: Colors.red, // Tema Admin
+                                color: themeColor,
                               ),
                             ),
                           ],

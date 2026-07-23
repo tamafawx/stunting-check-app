@@ -6,10 +6,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:flutter_stunting_posyandu/bidan/konsultasi_bidan.dart';
-import 'bidan/edukasi_bidan.dart';
-import 'bidan/kelola_balita_bidan.dart';
-import 'bidan/detail_balita_bidan.dart';
+import 'edukasi.dart';
+import 'balita_kelola.dart';
+import 'balita_detail.dart';
 
 class UserHeaderSection extends StatelessWidget {
   final String userId;
@@ -199,7 +200,7 @@ class SummarySection extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16.0),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.05),
+                    color: Colors.grey.withValues(alpha: 0.05),
                     spreadRadius: 1,
                     blurRadius: 10,
                     offset: const Offset(0, 4),
@@ -242,7 +243,7 @@ class SummarySection extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 24),
@@ -292,7 +293,7 @@ class QuickMenuAccessBidan extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
+            color: Colors.grey.withValues(alpha: 0.05),
             spreadRadius: 1,
             blurRadius: 10,
             offset: const Offset(0, 4),
@@ -325,33 +326,33 @@ class QuickMenuAccessBidan extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const KelolaBalitaBidanScreen(),
+                      builder: (context) => const KelolaBalita(role: 'bidan'),
                     ),
                   );
                 },
               ),
-              _buildMenuItem(
-                icon: Icons.fact_check_outlined,
-                color: Colors.orange,
-                label: "Validasi\nPengukuran",
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Sistem Validasi segera hadir"),
-                    ),
-                  );
-                },
-              ),
-              _buildMenuItem(
-                icon: Icons.summarize_outlined,
-                color: Colors.green,
-                label: "Laporan\nGizi",
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Unduh laporan segera aktif")),
-                  );
-                },
-              ),
+              // _buildMenuItem(
+              //   icon: Icons.fact_check_outlined,
+              //   color: Colors.orange,
+              //   label: "Validasi\nPengukuran",
+              //   onTap: () {
+              //     ScaffoldMessenger.of(context).showSnackBar(
+              //       const SnackBar(
+              //         content: Text("Sistem Validasi segera hadir"),
+              //       ),
+              //     );
+              //   },
+              // ),
+              // _buildMenuItem(
+              //   icon: Icons.summarize_outlined,
+              //   color: Colors.green,
+              //   label: "Laporan\nGizi",
+              //   onTap: () {
+              //     ScaffoldMessenger.of(context).showSnackBar(
+              //       const SnackBar(content: Text("Unduh laporan segera aktif")),
+              //     );
+              //   },
+              // ),
               _buildMenuItem(
                 icon: Icons.menu_book_rounded,
                 color: Colors.blue,
@@ -360,8 +361,11 @@ class QuickMenuAccessBidan extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (BuildContext context) =>
-                          EdukasiBidan(userId: userId, fullName: fullName),
+                      builder: (BuildContext context) => Edukasi(
+                        userId: userId,
+                        fullName: fullName,
+                        role: 'bidan',
+                      ),
                     ),
                   );
                 },
@@ -406,7 +410,7 @@ class QuickMenuAccessBidan extends StatelessWidget {
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(icon, color: color, size: 30),
@@ -474,7 +478,7 @@ class LiveToddlersSectionBidan extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
+            color: Colors.grey.withValues(alpha: 0.05),
             spreadRadius: 1,
             blurRadius: 10,
             offset: const Offset(0, 4),
@@ -500,7 +504,7 @@ class LiveToddlersSectionBidan extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const KelolaBalitaBidanScreen(),
+                      builder: (context) => const KelolaBalita(role: 'bidan'),
                     ),
                   );
                 },
@@ -579,9 +583,10 @@ class LiveToddlersSectionBidan extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => DetailBalitaBidanScreen(
+                            builder: (context) => DetailBalita(
                               docId: doc.id,
                               data: data,
+                              role: 'bidan',
                             ),
                           ),
                         );
@@ -589,10 +594,8 @@ class LiveToddlersSectionBidan extends StatelessWidget {
                       leading: CircleAvatar(
                         radius: 20,
                         backgroundColor: jenisKelamin == 'Laki-laki'
-                            ? Colors.purple.withOpacity(
-                                0.1,
-                              ) // Diubah dari biru ke ungu
-                            : Colors.pink.withOpacity(0.1),
+                            ? Colors.purple.withValues(alpha: 0.1)
+                            : Colors.pink.withValues(alpha: 0.1),
                         backgroundImage: fotoUrl != null && fotoUrl.isNotEmpty
                             ? NetworkImage(fotoUrl)
                             : null,
@@ -601,8 +604,7 @@ class LiveToddlersSectionBidan extends StatelessWidget {
                                 Icons.child_care,
                                 size: 20,
                                 color: jenisKelamin == 'Laki-laki'
-                                    ? Colors
-                                          .purple // Diubah dari biru ke ungu
+                                    ? Colors.purple
                                     : Colors.pink,
                               )
                             : null,

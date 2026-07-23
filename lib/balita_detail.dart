@@ -1,11 +1,3 @@
-// Halaman untuk melihat informasi detail balita. Ada juga ringkasan
-// riwayat, dan grafik tampil untuk data kedepannya. Dan juga dapat
-// langsung edit (kader).
-
-// Role yang dapat akses:
-// - Kader
-// - Bidan
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -14,8 +6,14 @@ import 'balita_edit.dart';
 class DetailBalita extends StatefulWidget {
   final String docId;
   final Map<String, dynamic> data;
+  final String role;
 
-  const DetailBalita({super.key, required this.docId, required this.data});
+  const DetailBalita({
+    super.key,
+    required this.docId,
+    required this.data,
+    required this.role,
+  });
 
   @override
   State<DetailBalita> createState() => _DetailBalitaState();
@@ -26,6 +24,9 @@ class _DetailBalitaState extends State<DetailBalita>
   late TabController _tabController;
   Map<String, dynamic> _balitaData = {};
   bool _isLoading = true;
+
+  // Setel warna dinamis berdasarkan role
+  Color get themeColor => widget.role == 'bidan' ? Colors.purple : Colors.blue;
 
   @override
   void initState() {
@@ -81,11 +82,9 @@ class _DetailBalitaState extends State<DetailBalita>
     } else {
       return "-";
     }
-
     DateTime now = DateTime.now();
     int years = now.year - birthDate.year;
     int months = now.month - birthDate.month;
-
     if (months < 0) {
       years--;
       months += 12;
@@ -97,7 +96,6 @@ class _DetailBalitaState extends State<DetailBalita>
         months += 11;
       }
     }
-
     if (years == 0) {
       return "$months bln";
     }
@@ -115,7 +113,6 @@ class _DetailBalitaState extends State<DetailBalita>
     );
     final String idBalita = "BLT-${widget.docId.substring(0, 5).toUpperCase()}";
 
-    // MENGAMBIL FOTO URL DARI FIRESTORE
     final String? fotoUrl = _balitaData['fotoUrl'] ?? widget.data['fotoUrl'];
 
     return Scaffold(
@@ -134,18 +131,22 @@ class _DetailBalitaState extends State<DetailBalita>
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_outlined, color: Colors.black87),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      EditBalitaScreen(docId: widget.docId, data: _balitaData),
-                ),
-              );
-            },
-          ),
+          // Tombol Edit HANYA jika kader
+          if (widget.role == 'kader')
+            IconButton(
+              icon: const Icon(Icons.edit_outlined, color: Colors.black87),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditBalitaScreen(
+                      docId: widget.docId,
+                      data: _balitaData,
+                    ),
+                  ),
+                );
+              },
+            ),
           const SizedBox(width: 8),
         ],
       ),
@@ -159,7 +160,6 @@ class _DetailBalitaState extends State<DetailBalita>
             ),
             child: Row(
               children: [
-                // FOTO PROFIL BALITA
                 Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
@@ -174,12 +174,12 @@ class _DetailBalitaState extends State<DetailBalita>
                   child: CircleAvatar(
                     radius: 40,
                     backgroundColor: jenisKelamin == 'Laki-laki'
-                        ? Colors.blue[50]
+                        ? themeColor.withValues(alpha: 0.1)
                         : Colors.pink[50],
                     child: CircleAvatar(
                       radius: 36,
                       backgroundColor: jenisKelamin == 'Laki-laki'
-                          ? Colors.blue[100]
+                          ? themeColor.withValues(alpha: 0.2)
                           : Colors.pink[100],
                       backgroundImage: fotoUrl != null && fotoUrl.isNotEmpty
                           ? NetworkImage(fotoUrl)
@@ -189,7 +189,7 @@ class _DetailBalitaState extends State<DetailBalita>
                               Icons.child_care_rounded,
                               size: 44,
                               color: jenisKelamin == 'Laki-laki'
-                                  ? Colors.blue[700]
+                                  ? themeColor
                                   : Colors.pink[700],
                             )
                           : null,
@@ -240,9 +240,9 @@ class _DetailBalitaState extends State<DetailBalita>
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: TabBar(
               controller: _tabController,
-              labelColor: Colors.blue[700],
+              labelColor: themeColor,
               unselectedLabelColor: Colors.grey[400],
-              indicatorColor: Colors.blue[700],
+              indicatorColor: themeColor,
               indicatorSize: TabBarIndicatorSize.tab,
               indicatorWeight: 3.0,
               labelStyle: const TextStyle(
@@ -281,14 +281,11 @@ class _DetailBalitaState extends State<DetailBalita>
       stream: FirebaseFirestore.instance
           .collection('pemeriksaan')
           .where('balitaId', isEqualTo: widget.docId)
-          // .orderBy dan .limit DIHAPUS agar tidak terkena error Composite Index Firestore
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-
-        // Tampilkan error jika query Firebase ditolak
         if (snapshot.hasError) {
           return Center(
             child: Text(
@@ -298,8 +295,6 @@ class _DetailBalitaState extends State<DetailBalita>
             ),
           );
         }
-
-        // Jika belum ada data pemeriksaan sama sekali
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Center(
             child: Column(
@@ -325,17 +320,15 @@ class _DetailBalitaState extends State<DetailBalita>
           );
         }
 
-        // Urutkan data secara lokal (Menggantikan fungsi orderBy Firestore)
         var docs = snapshot.data!.docs;
         docs.sort((a, b) {
           var dataA = a.data() as Map<String, dynamic>;
           var dataB = b.data() as Map<String, dynamic>;
           Timestamp tA = dataA['tanggal'] ?? Timestamp.now();
           Timestamp tB = dataB['tanggal'] ?? Timestamp.now();
-          return tB.compareTo(tA); // Descending (Terbaru di urutan pertama)
+          return tB.compareTo(tA);
         });
 
-        // Mengambil data pemeriksaan paling terbaru
         var latestDoc = docs.first.data() as Map<String, dynamic>;
         String berat = latestDoc['beratBadan'] != null
             ? "${latestDoc['beratBadan']} kg"
@@ -349,7 +342,6 @@ class _DetailBalitaState extends State<DetailBalita>
         String lengan = latestDoc['lingkarLengan'] != null
             ? "${latestDoc['lingkarLengan']} cm"
             : "-";
-
         String tglPemeriksaan = "-";
         if (latestDoc['tanggal'] != null) {
           Timestamp t = latestDoc['tanggal'];
@@ -358,11 +350,9 @@ class _DetailBalitaState extends State<DetailBalita>
               "${dt.day.toString().padLeft(2, '0')} ${_getMonthName(dt.month)} ${dt.year}";
         }
 
-        // Menyesuaikan dengan field statusStunting yang disimpan di InputPengukuranScreen
         String statusStunting =
             latestDoc['statusStunting'] ?? "Tidak Diketahui";
 
-        // Logika Tema Warna berdasarkan Status Stunting
         Color alertColor = Colors.green;
         Color bgColor = Colors.green.shade50;
         Color borderColor = Colors.green.shade200;
@@ -417,7 +407,7 @@ class _DetailBalitaState extends State<DetailBalita>
                       label: "Berat Badan Terakhir",
                       value: berat,
                       date: tglPemeriksaan,
-                      color: Colors.blue[600]!,
+                      color: themeColor,
                     ),
                     const Divider(height: 16, thickness: 0.5),
                     _buildMeasurementRow(
@@ -425,7 +415,7 @@ class _DetailBalitaState extends State<DetailBalita>
                       label: "Tinggi Badan Terakhir",
                       value: tinggi,
                       date: tglPemeriksaan,
-                      color: Colors.blue[600]!,
+                      color: themeColor,
                     ),
                     const Divider(height: 16, thickness: 0.5),
                     _buildMeasurementRow(
@@ -433,7 +423,7 @@ class _DetailBalitaState extends State<DetailBalita>
                       label: "Lingkar Kepala",
                       value: kepala,
                       date: tglPemeriksaan,
-                      color: Colors.blue[600]!,
+                      color: themeColor,
                     ),
                     const Divider(height: 16, thickness: 0.5),
                     _buildMeasurementRow(
@@ -498,7 +488,6 @@ class _DetailBalitaState extends State<DetailBalita>
                         ],
                       ),
                     ),
-                    // Hanya tampilkan grafik merah peringatan jika ada risiko
                     if (alertColor == Colors.redAccent)
                       SizedBox(
                         width: 60,
@@ -513,21 +502,19 @@ class _DetailBalitaState extends State<DetailBalita>
                 width: double.infinity,
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
-                  color: const Color(
-                    0xFFF0F6FF,
-                  ), // Light premium blue background
+                  color: themeColor.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.info_outline, color: Colors.blue[700], size: 20),
+                    Icon(Icons.info_outline, color: themeColor, size: 20),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         saranText,
                         style: TextStyle(
-                          color: Colors.blue[900],
+                          color: themeColor,
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                           height: 1.4,
@@ -550,14 +537,11 @@ class _DetailBalitaState extends State<DetailBalita>
       stream: FirebaseFirestore.instance
           .collection('pemeriksaan')
           .where('balitaId', isEqualTo: widget.docId)
-          // .orderBy DIHAPUS agar tidak terkena error Composite Index Firestore
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-
-        // Tampilkan error jika query Firebase ditolak
         if (snapshot.hasError) {
           return Center(
             child: Text(
@@ -567,7 +551,6 @@ class _DetailBalitaState extends State<DetailBalita>
             ),
           );
         }
-
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Center(
             child: Column(
@@ -588,14 +571,13 @@ class _DetailBalitaState extends State<DetailBalita>
           );
         }
 
-        // Urutkan data secara lokal (Menggantikan fungsi orderBy Firestore)
         var docs = snapshot.data!.docs;
         docs.sort((a, b) {
           var dataA = a.data() as Map<String, dynamic>;
           var dataB = b.data() as Map<String, dynamic>;
           Timestamp tA = dataA['tanggal'] ?? Timestamp.now();
           Timestamp tB = dataB['tanggal'] ?? Timestamp.now();
-          return tB.compareTo(tA); // Descending
+          return tB.compareTo(tA);
         });
 
         return ListView.builder(
@@ -630,9 +612,9 @@ class _DetailBalitaState extends State<DetailBalita>
                     children: [
                       Text(
                         formattedDate,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.blue,
+                          color: themeColor,
                         ),
                       ),
                       Container(
@@ -740,7 +722,9 @@ class _DetailBalitaState extends State<DetailBalita>
             Expanded(
               child: CustomPaint(
                 size: Size.infinite,
-                painter: GrowthChartPainter(),
+                painter: GrowthChartPainter(
+                  themeColor: themeColor,
+                ), // Pass themeColor ke Canvas Painter
               ),
             ),
           ],
@@ -831,19 +815,15 @@ class SparklinePainter extends CustomPainter {
       ..color = Colors.redAccent
       ..strokeWidth = 2.0
       ..style = PaintingStyle.stroke;
-
     final paintDot = Paint()
       ..color = Colors.redAccent
       ..style = PaintingStyle.fill;
-
     final path = Path()
       ..moveTo(0, size.height * 0.3)
       ..lineTo(size.width * 0.3, size.height * 0.7)
       ..lineTo(size.width * 0.6, size.height * 0.5)
       ..lineTo(size.width, size.height * 0.4);
-
     canvas.drawPath(path, paintLine);
-
     canvas.drawCircle(Offset(0, size.height * 0.3), 3, paintDot);
     canvas.drawCircle(Offset(size.width * 0.3, size.height * 0.7), 3, paintDot);
     canvas.drawCircle(Offset(size.width * 0.6, size.height * 0.5), 3, paintDot);
@@ -855,13 +835,16 @@ class SparklinePainter extends CustomPainter {
 }
 
 class GrowthChartPainter extends CustomPainter {
+  final Color themeColor;
+
+  GrowthChartPainter({required this.themeColor});
+
   @override
   void paint(Canvas canvas, Size size) {
     final paintGrid = Paint()
       ..color = Colors.grey[200]!
       ..strokeWidth = 1.0;
 
-    // Draw background grid
     for (int i = 1; i < 5; i++) {
       double x = size.width * (i / 5);
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paintGrid);
@@ -871,12 +854,10 @@ class GrowthChartPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paintGrid);
     }
 
-    // WHO Standard growth reference lines (Green/Yellow bounds)
     final greenLimitPaint = Paint()
       ..color = Colors.green.withValues(alpha: 0.3)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
-
     final redLimitPaint = Paint()
       ..color = Colors.red.withValues(alpha: 0.3)
       ..strokeWidth = 2
@@ -892,7 +873,6 @@ class GrowthChartPainter extends CustomPainter {
         size.width,
         size.height * 0.1,
       );
-
     final pathLower = Path()
       ..moveTo(0, size.height * 0.95)
       ..cubicTo(
@@ -907,14 +887,13 @@ class GrowthChartPainter extends CustomPainter {
     canvas.drawPath(pathUpper, greenLimitPaint);
     canvas.drawPath(pathLower, redLimitPaint);
 
-    // Current Baby Growth Path
     final babyPaint = Paint()
-      ..color = Colors.blue[600]!
+      ..color =
+          themeColor // Warna garis mengikuti role
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
-
     final babyDotPaint = Paint()
-      ..color = Colors.blue[600]!
+      ..color = themeColor
       ..style = PaintingStyle.fill;
 
     final babyPath = Path()
@@ -922,10 +901,9 @@ class GrowthChartPainter extends CustomPainter {
       ..lineTo(size.width * 0.2, size.height * 0.78)
       ..lineTo(size.width * 0.4, size.height * 0.72)
       ..lineTo(size.width * 0.6, size.height * 0.62)
-      ..lineTo(size.width * 0.8, size.height * 0.65); // showing stunting dip
+      ..lineTo(size.width * 0.8, size.height * 0.65);
 
     canvas.drawPath(babyPath, babyPaint);
-
     canvas.drawCircle(Offset(0, size.height * 0.9), 4, babyDotPaint);
     canvas.drawCircle(
       Offset(size.width * 0.2, size.height * 0.78),

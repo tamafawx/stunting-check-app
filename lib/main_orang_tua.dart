@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 // Import Pages (Orang Tua)
 import 'beranda_orang_tua.dart';
 import 'profile.dart';
-import '/orang_tua/balita_orang_tua.dart';
+import 'balita.dart';
 
 class MainOrangTua extends StatefulWidget {
   final String userId;

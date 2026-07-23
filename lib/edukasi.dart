@@ -435,7 +435,10 @@ class _EdukasiState extends State<Edukasi> {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => DetailEdukasi(data: data)),
+            MaterialPageRoute(
+              builder: (context) =>
+                  DetailEdukasi(data: data, role: widget.role),
+            ),
           );
         },
         child: Column(
@@ -573,7 +576,10 @@ class _EdukasiState extends State<Edukasi> {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => DetailEdukasi(data: data)),
+            MaterialPageRoute(
+              builder: (context) =>
+                  DetailEdukasi(data: data, role: widget.role),
+            ),
           );
         },
         child: SizedBox(

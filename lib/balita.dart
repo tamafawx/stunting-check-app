@@ -1,3 +1,9 @@
+// Menampilkan data balita yang sudah di atur oleh kader sesuai dengan
+// database. Nantinya halaman ini akan menampilkan data anak mereka saja.
+
+// Role yang dapat akses:
+// - Orang Tua
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -47,7 +53,7 @@ class _BalitaOrangTuaScreenState extends State<BalitaOrangTuaScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[50], // Latar belakang lembut khas Orang Tua
+      backgroundColor: Colors.green[50],
       appBar: AppBar(
         title: const Text(
           'Anak Saya',
@@ -66,7 +72,6 @@ class _BalitaOrangTuaScreenState extends State<BalitaOrangTuaScreen> {
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        // Mengambil daftar balita di mana userId orang tua terdaftar di array orangTuaIds
         stream: FirebaseFirestore.instance
             .collection('balita')
             .where('orangTuaIds', arrayContains: widget.userId)
@@ -197,7 +202,6 @@ class _BalitaOrangTuaScreenState extends State<BalitaOrangTuaScreen> {
         child: InkWell(
           borderRadius: BorderRadius.circular(24),
           onTap: () {
-            // Rencana ke depannya: Navigasi ke detail tumbuh kembang
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Detail perkembangan anak akan segera hadir!'),
@@ -211,7 +215,6 @@ class _BalitaOrangTuaScreenState extends State<BalitaOrangTuaScreen> {
               children: [
                 Row(
                   children: [
-                    // --- FOTO PROFIL BALITA DENGAN BORDER ---
                     Container(
                       width: 70,
                       height: 70,
@@ -247,7 +250,6 @@ class _BalitaOrangTuaScreenState extends State<BalitaOrangTuaScreen> {
                     ),
                     const SizedBox(width: 16),
 
-                    // --- NAMA, USIA & JENIS KELAMIN ---
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,7 +306,6 @@ class _BalitaOrangTuaScreenState extends State<BalitaOrangTuaScreen> {
                       ),
                     ),
 
-                    // --- ICON PANAH KANAN ---
                     Icon(
                       Icons.chevron_right_rounded,
                       color: Colors.grey[300],
@@ -316,7 +317,6 @@ class _BalitaOrangTuaScreenState extends State<BalitaOrangTuaScreen> {
                 Divider(color: Colors.grey[100], thickness: 2, height: 1),
                 const SizedBox(height: 16),
 
-                // --- BAGIAN STATUS PEMERIKSAAN ---
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -365,7 +365,6 @@ class _BalitaOrangTuaScreenState extends State<BalitaOrangTuaScreen> {
           );
         }
 
-        // Urutkan data secara manual (Terbaru di atas) dengan .toList() agar tidak error
         var docs = snapshot.data!.docs.toList();
         docs.sort((a, b) {
           Timestamp timeA =
@@ -377,7 +376,6 @@ class _BalitaOrangTuaScreenState extends State<BalitaOrangTuaScreen> {
           return timeB.compareTo(timeA);
         });
 
-        // Ambil data pengukuran terbaru
         final latestData = docs.first.data() as Map<String, dynamic>;
         String rawStatus =
             (latestData['status'] ??

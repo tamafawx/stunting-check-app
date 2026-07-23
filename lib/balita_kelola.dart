@@ -1,17 +1,11 @@
-// Menampilkan data balita yang ada dari database dan juga dapat
-// menambah, lihat detail, dan juga hapus data balita
-
-// Role yang dapat akses:
-// - Kader
-// - Bidan
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'balita_tambah.dart';
 import 'balita_detail.dart';
 
 class KelolaBalita extends StatefulWidget {
-  const KelolaBalita({super.key});
+  final String role; // Tambahan parameter role
+  const KelolaBalita({super.key, required this.role});
 
   @override
   State<KelolaBalita> createState() => _KelolaBalitaState();
@@ -21,6 +15,9 @@ class _KelolaBalitaState extends State<KelolaBalita> {
   String _searchQuery = '';
   bool _isAscending = true;
   final TextEditingController _searchController = TextEditingController();
+
+  // Deteksi warna berdasarkan role
+  Color get themeColor => widget.role == 'bidan' ? Colors.purple : Colors.blue;
 
   @override
   void dispose() {
@@ -114,6 +111,7 @@ class _KelolaBalitaState extends State<KelolaBalita> {
     DateTime now = DateTime.now();
     int years = now.year - birthDate.year;
     int months = now.month - birthDate.month;
+
     if (months < 0) {
       years--;
       months += 12;
@@ -175,7 +173,7 @@ class _KelolaBalitaState extends State<KelolaBalita> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC), // Warna background soft modern
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text(
           'Data Balita',
@@ -186,7 +184,7 @@ class _KelolaBalitaState extends State<KelolaBalita> {
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.blue,
+        backgroundColor: themeColor,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -197,18 +195,14 @@ class _KelolaBalitaState extends State<KelolaBalita> {
             .snapshots(),
         builder: (context, balitaSnapshot) {
           if (balitaSnapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.blue),
-            );
+            return Center(child: CircularProgressIndicator(color: themeColor));
           }
-
           if (balitaSnapshot.hasError) {
             return const Center(
               child: Text('Terjadi kesalahan saat memuat data.'),
             );
           }
 
-          // Nested stream untuk memuat status pemeriksaan terbaru
           return StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('pemeriksaan')
@@ -216,15 +210,14 @@ class _KelolaBalitaState extends State<KelolaBalita> {
             builder: (context, pemeriksaanSnapshot) {
               if (pemeriksaanSnapshot.connectionState ==
                   ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(color: Colors.blue),
+                return Center(
+                  child: CircularProgressIndicator(color: themeColor),
                 );
               }
 
               var balitaDocs = balitaSnapshot.data?.docs ?? [];
               var pemeriksaanDocs = pemeriksaanSnapshot.data?.docs ?? [];
 
-              // Mencari status stunting terbaru untuk setiap balita
               Map<String, String> latestStatusMap = {};
               Map<String, DateTime> latestDateMap = {};
 
@@ -232,7 +225,6 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                 var data = doc.data() as Map<String, dynamic>;
                 String bId = data['balitaId'] ?? '';
                 Timestamp? ts = data['tanggal'];
-
                 if (bId.isNotEmpty && ts != null) {
                   DateTime date = ts.toDate();
                   if (!latestDateMap.containsKey(bId) ||
@@ -261,7 +253,6 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                 }
               }
 
-              // Filter pencarian dan urutan
               var filteredBalita = balitaDocs.where((doc) {
                 var data = doc.data() as Map<String, dynamic>;
                 var name = (data['nama'] ?? '').toString().toLowerCase();
@@ -294,11 +285,11 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                           vertical: 20,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.blue,
+                          color: themeColor,
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.blue.withValues(alpha: 0.3),
+                              color: themeColor.withValues(alpha: 0.3),
                               blurRadius: 15,
                               offset: const Offset(0, 8),
                             ),
@@ -357,8 +348,6 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                         ),
                       ),
                     ),
-
-                    // --- BAGIAN 3 KARTU STATUS ---
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Row(
@@ -390,8 +379,6 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                       ),
                     ),
                     const SizedBox(height: 24),
-
-                    // --- BAGIAN PENCARIAN & DAFTAR BALITA ---
                     Container(
                       padding: const EdgeInsets.all(16.0),
                       decoration: const BoxDecoration(
@@ -425,13 +412,13 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                                   _isAscending
                                       ? Icons.sort_by_alpha
                                       : Icons.sort_by_alpha_outlined,
-                                  color: Colors.blue,
+                                  color: themeColor,
                                   size: 18,
                                 ),
                                 label: Text(
                                   _isAscending ? 'A-Z' : 'Z-A',
-                                  style: const TextStyle(
-                                    color: Colors.blue,
+                                  style: TextStyle(
+                                    color: themeColor,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -439,8 +426,6 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                             ],
                           ),
                           const SizedBox(height: 8),
-
-                          // Search Bar
                           TextField(
                             controller: _searchController,
                             onChanged: (value) {
@@ -480,8 +465,6 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                             ),
                           ),
                           const SizedBox(height: 16),
-
-                          // List Balita Kosong
                           if (filteredBalita.isEmpty)
                             Center(
                               child: Padding(
@@ -507,8 +490,6 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                                 ),
                               ),
                             ),
-
-                          // List Balita Tersedia
                           if (filteredBalita.isNotEmpty)
                             ListView.builder(
                               padding: const EdgeInsets.only(bottom: 80),
@@ -520,7 +501,6 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                                 final data =
                                     document.data() as Map<String, dynamic>;
                                 final docId = document.id;
-
                                 final nama = data['nama'] ?? 'Tanpa Nama';
                                 final jenisKelamin =
                                     data['jenisKelamin'] ?? '-';
@@ -529,7 +509,6 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                                 );
                                 final String? fotoUrl = data['fotoUrl'];
 
-                                // Mendapatkan status dan warna badge
                                 String statusRaw =
                                     latestStatusMap[docId] ?? 'Normal';
                                 String statusTampil = "Aman";
@@ -583,6 +562,7 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                                           builder: (context) => DetailBalita(
                                             docId: docId,
                                             data: data,
+                                            role: widget.role,
                                           ),
                                         ),
                                       );
@@ -591,7 +571,7 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                                       radius: 24,
                                       backgroundColor:
                                           jenisKelamin == 'Laki-laki'
-                                          ? Colors.blue.withValues(alpha: 0.15)
+                                          ? themeColor.withValues(alpha: 0.15)
                                           : Colors.pink.withValues(alpha: 0.15),
                                       backgroundImage:
                                           fotoUrl != null && fotoUrl.isNotEmpty
@@ -602,7 +582,7 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                                           ? Icon(
                                               Icons.child_care,
                                               color: jenisKelamin == 'Laki-laki'
-                                                  ? Colors.blue
+                                                  ? themeColor
                                                   : Colors.pink,
                                             )
                                           : null,
@@ -630,7 +610,6 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                                     trailing: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        // Badge Status
                                         Container(
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 10,
@@ -653,48 +632,48 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                                             ),
                                           ),
                                         ),
-                                        const SizedBox(width: 4),
-
-                                        // Tombol Opsi (Hapus)
-                                        PopupMenuButton<String>(
-                                          icon: const Icon(
-                                            Icons.more_vert,
-                                            color: Colors.black54,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
+                                        // Opsi Hapus hanya muncul untuk Kader
+                                        if (widget.role == 'kader') ...[
+                                          const SizedBox(width: 4),
+                                          PopupMenuButton<String>(
+                                            icon: const Icon(
+                                              Icons.more_vert,
+                                              color: Colors.black54,
                                             ),
-                                          ),
-                                          onSelected: (value) {
-                                            if (value == 'hapus') {
-                                              _hapusBalita(docId, nama);
-                                            }
-                                          },
-                                          itemBuilder: (context) => [
-                                            const PopupMenuItem(
-                                              value: 'hapus',
-                                              child: Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons
-                                                        .delete_outline_rounded,
-                                                    color: Colors.red,
-                                                  ),
-                                                  SizedBox(width: 8),
-                                                  Text(
-                                                    'Hapus Data',
-                                                    style: TextStyle(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            onSelected: (value) {
+                                              if (value == 'hapus') {
+                                                _hapusBalita(docId, nama);
+                                              }
+                                            },
+                                            itemBuilder: (context) => [
+                                              const PopupMenuItem(
+                                                value: 'hapus',
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons
+                                                          .delete_outline_rounded,
                                                       color: Colors.red,
-                                                      fontWeight:
-                                                          FontWeight.w500,
                                                     ),
-                                                  ),
-                                                ],
+                                                    SizedBox(width: 8),
+                                                    Text(
+                                                      'Hapus Data',
+                                                      style: TextStyle(
+                                                        color: Colors.red,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                          ],
-                                        ),
+                                            ],
+                                          ),
+                                        ],
                                       ],
                                     ),
                                   ),
@@ -711,18 +690,21 @@ class _KelolaBalitaState extends State<KelolaBalita> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const TambahBalita()),
-          );
-        },
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        elevation: 4,
-        child: const Icon(Icons.add),
-      ),
+      // Tombol Tambah Data hanya muncul untuk Kader
+      floatingActionButton: widget.role == 'kader'
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const TambahBalita()),
+                );
+              },
+              backgroundColor: themeColor,
+              foregroundColor: Colors.white,
+              elevation: 4,
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 }
