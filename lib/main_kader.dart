@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'beranda_kader.dart';
 import 'kader/riwayat_kader.dart';
-import 'kader/profile_kader.dart';
+import 'profile.dart';
 
 class MainKader extends StatefulWidget {
   final String userId;
@@ -25,7 +25,11 @@ class _MainKader extends State<MainKader> {
           children: [
             BerandaKader(userId: widget.userId, fullName: widget.fullName),
             RiwayatKader(),
-            ProfileKader(userId: widget.userId, fullName: widget.fullName),
+            Profile(
+              userId: widget.userId,
+              fullName: widget.fullName,
+              role: 'kader',
+            ),
           ],
         ),
         bottomNavigationBar: TabBar(

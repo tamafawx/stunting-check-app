@@ -1,3 +1,12 @@
+// Tempat untuk menganti informasi biasa dari foto profil, nama,
+// dan juga email user.
+
+// Role yang dapat akses:
+// - Admin
+// - Kader
+// - Bidan
+// - Orang Tua
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -5,28 +14,32 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_cropper/image_cropper.dart';
 
-class UbahProfilAdminScreen extends StatefulWidget {
+class UbahProfile extends StatefulWidget {
   final String userId;
-  const UbahProfilAdminScreen({super.key, required this.userId});
+  final String role;
+  const UbahProfile({super.key, required this.userId, required this.role});
 
   @override
-  State<UbahProfilAdminScreen> createState() => _UbahProfilAdminScreenState();
+  State<UbahProfile> createState() => _UbahProfilState();
 }
 
-class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
+class _UbahProfilState extends State<UbahProfile> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _namaController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+
   bool _isLoading = false;
   bool _isFetching = true;
   File? _imageFile;
   String? _currentImageUrl;
+  late String _role = '';
   bool _isImageDeleted = false;
   final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
+    _role = widget.role;
     _loadUserData();
   }
 
@@ -36,12 +49,14 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
           .collection('users')
           .doc(widget.userId)
           .get();
+
       if (userDoc.exists) {
         Map<String, dynamic> data = userDoc.data() as Map<String, dynamic>;
         setState(() {
           _namaController.text = data['fullName'] ?? '';
           _emailController.text = data['email'] ?? '';
           _currentImageUrl = data['profileUrl'];
+          _role = (data['role'] ?? '').toString().toLowerCase();
         });
       }
     } catch (e) {
@@ -85,6 +100,16 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
   }
 
   Future<void> _cropImage(String path) async {
+    Color mainThemeColor = (_role == 'admin')
+        ? Colors.red
+        : (_role == 'kader')
+        ? Colors.blue
+        : (_role == 'bidan')
+        ? Colors.purple
+        : (_role == 'orang-tua')
+        ? Colors.green
+        : Colors.grey;
+
     try {
       final CroppedFile? croppedFile = await ImageCropper().cropImage(
         sourcePath: path,
@@ -92,7 +117,7 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: 'Sesuaikan Foto',
-            toolbarColor: Colors.red,
+            toolbarColor: mainThemeColor,
             toolbarWidgetColor: Colors.white,
             initAspectRatio: CropAspectRatioPreset.square,
             lockAspectRatio: true,
@@ -101,6 +126,7 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
           IOSUiSettings(title: 'Sesuaikan Foto', aspectRatioLockEnabled: true),
         ],
       );
+
       if (croppedFile != null) {
         setState(() {
           _imageFile = File(croppedFile.path);
@@ -159,7 +185,7 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
                     _buildOptionButton(
                       icon: Icons.camera_alt_rounded,
                       label: 'Kamera',
-                      color: Colors.red,
+                      color: Colors.blue,
                       onTap: () {
                         Navigator.pop(context);
                         _pickImage(ImageSource.camera);
@@ -215,7 +241,7 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 28),
@@ -256,6 +282,7 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
       setState(() => _isLoading = true);
       try {
         String? newProfileUrl = _currentImageUrl;
+
         if (_isImageDeleted) {
           newProfileUrl = null;
           try {
@@ -268,6 +295,7 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
         } else if (_imageFile != null) {
           newProfileUrl = await _uploadImage();
         }
+
         await FirebaseFirestore.instance
             .collection('users')
             .doc(widget.userId)
@@ -277,6 +305,7 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
               'profileUrl': newProfileUrl,
               'updatedAt': FieldValue.serverTimestamp(),
             });
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -310,6 +339,16 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Color mainThemeColor = (_role == 'admin')
+        ? Colors.red
+        : (_role == 'kader')
+        ? Colors.blue
+        : (_role == 'bidan')
+        ? Colors.purple
+        : (_role == 'orang-tua')
+        ? Colors.green
+        : Colors.grey;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -322,12 +361,12 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.red,
+        backgroundColor: mainThemeColor,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: _isFetching
-          ? const Center(child: CircularProgressIndicator(color: Colors.red))
+          ? Center(child: CircularProgressIndicator(color: mainThemeColor))
           : SingleChildScrollView(
               child: Form(
                 key: _formKey,
@@ -340,9 +379,9 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
                         Container(
                           height: 80,
                           width: double.infinity,
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.only(
+                          decoration: BoxDecoration(
+                            color: mainThemeColor,
+                            borderRadius: const BorderRadius.only(
                               bottomLeft: Radius.circular(24),
                               bottomRight: Radius.circular(24),
                             ),
@@ -366,7 +405,7 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
                             children: [
                               CircleAvatar(
                                 radius: 46,
-                                backgroundColor: const Color(0xFFFFEBEE),
+                                backgroundColor: const Color(0xFFE3F2FD),
                                 backgroundImage: _imageFile != null
                                     ? FileImage(_imageFile!) as ImageProvider
                                     : (_currentImageUrl != null &&
@@ -377,13 +416,14 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
                                     _imageFile == null &&
                                         (_currentImageUrl == null ||
                                             _isImageDeleted)
-                                    ? const Icon(
+                                    ? Icon(
                                         Icons.person,
                                         size: 46,
-                                        color: Colors.red,
+                                        color: mainThemeColor,
                                       )
                                     : null,
                               ),
+
                               Positioned(
                                 bottom: 0,
                                 right: 0,
@@ -393,7 +433,7 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
                                   child: Container(
                                     padding: const EdgeInsets.all(6),
                                     decoration: BoxDecoration(
-                                      color: Colors.red,
+                                      color: mainThemeColor,
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                         color: Colors.white,
@@ -414,6 +454,7 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
                       ],
                     ),
                     const SizedBox(height: 24),
+
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Column(
@@ -435,7 +476,7 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.02),
+                                  color: Colors.black.withValues(alpha: 0.02),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -447,6 +488,7 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
                                   controller: _namaController,
                                   icon: Icons.person_outline_rounded,
                                   hint: "Nama Lengkap",
+                                  themeColor: mainThemeColor,
                                   validatorMsg: "Nama tidak boleh kosong",
                                 ),
                                 const Divider(
@@ -459,6 +501,7 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
                                   controller: _emailController,
                                   icon: Icons.email_outlined,
                                   hint: "Alamat Email",
+                                  themeColor: mainThemeColor,
                                   keyboardType: TextInputType.emailAddress,
                                   validatorMsg: "Email tidak valid",
                                   validator: (value) {
@@ -476,6 +519,7 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
                             ),
                           ),
                           const SizedBox(height: 32),
+
                           const Text(
                             "TINDAKAN",
                             style: TextStyle(
@@ -492,7 +536,7 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
                             child: ElevatedButton(
                               onPressed: _isLoading ? null : _simpanPerubahan,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
+                                backgroundColor: mainThemeColor,
                                 foregroundColor: Colors.white,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
@@ -532,6 +576,7 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
     required TextEditingController controller,
     required IconData icon,
     required String hint,
+    required Color themeColor,
     TextInputType? keyboardType,
     String? validatorMsg,
     String? Function(String?)? validator,
@@ -544,10 +589,10 @@ class _UbahProfilAdminScreenState extends State<UbahProfilAdminScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.red.withOpacity(0.08),
+              color: themeColor.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: Colors.red, size: 22),
+            child: Icon(icon, color: themeColor, size: 22),
           ),
           const SizedBox(width: 16),
           Expanded(

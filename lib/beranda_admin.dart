@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'admin/edukasi_admin.dart';
 import 'admin/kelola_pengguna_admin.dart';
-import 'admin/ubah_profile_admin.dart';
+import 'ubah_profile.dart';
 import 'admin/kelola_jadwal_admin.dart';
 
 class UserHeaderSection extends StatelessWidget {
@@ -295,7 +295,7 @@ class QuickMenuAccess extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                          UbahProfilAdminScreen(userId: userId),
+                          UbahProfile(userId: userId, role: 'admin'),
                     ),
                   );
                 },

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../beranda_bidan.dart';
-import 'riwayat_bidan.dart';
-import 'profile_bidan.dart';
+import 'beranda_bidan.dart';
+import 'bidan/riwayat_bidan.dart';
+import 'profile.dart';
 
 class MainBidan extends StatefulWidget {
   final String userId;
@@ -24,13 +24,17 @@ class _MainBidanState extends State<MainBidan> {
           children: [
             BerandaBidan(userId: widget.userId, fullName: widget.fullName),
             const RiwayatBidan(),
-            ProfilBidan(userId: widget.userId, fullName: widget.fullName),
+            Profile(
+              userId: widget.userId,
+              fullName: widget.fullName,
+              role: 'bidan',
+            ),
           ],
         ),
         bottomNavigationBar: TabBar(
           isScrollable: false,
           tabAlignment: TabAlignment.fill,
-          unselectedLabelColor: Colors.black.withOpacity(0.25),
+          unselectedLabelColor: Colors.black.withValues(alpha: .25),
           labelColor: Colors.purple,
           indicatorColor: Colors.purple,
           tabs: const [

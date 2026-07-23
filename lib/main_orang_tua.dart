@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 // Import Pages (Orang Tua)
 import 'beranda_orang_tua.dart';
-import '/orang_tua/profile_orang_tua.dart';
+import 'profile.dart';
 import '/orang_tua/balita_orang_tua.dart';
 
 class MainOrangTua extends StatefulWidget {
@@ -26,7 +26,11 @@ class _MainOrangTuaState extends State<MainOrangTua> {
           children: [
             BerandaOrangTua(fullName: widget.fullName, userId: widget.userId),
             BalitaOrangTuaScreen(userId: widget.userId), // Tab Anak di tengah
-            ProfileOrangTua(userId: widget.userId, fullName: widget.fullName),
+            Profile(
+              userId: widget.userId,
+              fullName: widget.fullName,
+              role: 'orang-tua',
+            ),
           ],
         ),
         bottomNavigationBar: TabBar(
