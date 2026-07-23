@@ -1,3 +1,9 @@
+// Menampilkan halaman utama beranda atau dashboard yang memiliki
+// beberapa fitur untuk keperluan masing-masing untuk bidan.
+
+// Role yang dapat akses:
+// - Bidan
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_stunting_posyandu/bidan/konsultasi_bidan.dart';

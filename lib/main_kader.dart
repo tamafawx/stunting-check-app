@@ -1,3 +1,9 @@
+// Jalannya utama untuk user yang role mempunyai
+// role kader.
+
+// Role yang dapat akses:
+// - Kader
+
 import 'package:flutter/material.dart';
 
 import 'beranda_kader.dart';

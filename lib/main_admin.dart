@@ -1,3 +1,9 @@
+// Jalannya utama untuk user yang mempunyai
+// role admin.
+
+// Role yang dapat akses:
+// - Admin
+
 import 'package:flutter/material.dart';
 
 import 'beranda_admin.dart';

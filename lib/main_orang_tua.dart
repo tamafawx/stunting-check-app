@@ -1,3 +1,9 @@
+// Jalannya utama untuk user yang mempunyai
+// role orang tua.
+
+// Role yang dapat akses:
+// - Orang Tua
+
 import 'package:flutter/material.dart';
 
 // Import Pages (Orang Tua)

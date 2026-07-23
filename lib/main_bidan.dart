@@ -1,3 +1,9 @@
+// Jalannya utama untuk user yang mempunyai
+// role bidan.
+
+// Role yang dapat akses:
+// - Bidan
+
 import 'package:flutter/material.dart';
 import 'beranda_bidan.dart';
 import 'bidan/riwayat_bidan.dart';

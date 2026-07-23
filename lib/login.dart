@@ -1,3 +1,8 @@
+// Halaman untuk login atau masuk user sesuai kredensial dari database.
+
+// Role yang dapat akses:
+// - Guest/All
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';

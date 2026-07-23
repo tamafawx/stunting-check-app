@@ -1,3 +1,9 @@
+// Halaman untuk mendaftar akun baru untuk aplikasi. Untuk mengganti
+// role user harus melewati dari si admin terlebih dahulu.
+
+// Role yang dapat akses:
+// - Guest/All
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';

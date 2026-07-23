@@ -1,3 +1,9 @@
+// Menampilkan halaman utama beranda atau dashboard yang memiliki
+// beberapa fitur untuk keperluan masing-masing untuk orang tua.
+
+// Role yang dapat akses:
+// - Orang Tua
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
