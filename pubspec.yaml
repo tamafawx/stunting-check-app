@@ -36,6 +36,7 @@ dependencies:
   firebase_storage: ^13.4.3
   firebase_messaging: ^16.4.3
 
+  flutter_launcher_icons: ^0.14.4
   shared_preferences: ^2.5.5
   flutter_local_notifications:
   fl_chart: ^1.2.0
@@ -106,3 +107,8 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon.png"
