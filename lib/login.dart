@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'register.dart';
 import 'main_admin.dart';
@@ -81,6 +82,12 @@ class _LoginState extends State<Login> {
           }
           return;
         }
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', true);
+        await prefs.setString('userId', userId);
+        await prefs.setString('fullName', fullName);
+        await prefs.setString('role', role);
 
         if (mounted) {
           if (role == 'admin') {

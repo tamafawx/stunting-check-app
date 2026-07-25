@@ -5,6 +5,7 @@
 // - Admin
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'beranda_admin.dart';
 import 'login.dart';
@@ -59,12 +60,17 @@ class _MainAdmin extends State<MainAdmin> {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              onPressed: () {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const Login()),
-                  (Route<dynamic> route) => false,
-                );
+              onPressed: () async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.clear();
+
+                if (context.mounted) {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => const Login()),
+                    (Route<dynamic> route) => false,
+                  );
+                }
               },
               child: const Text(
                 "Keluar",
