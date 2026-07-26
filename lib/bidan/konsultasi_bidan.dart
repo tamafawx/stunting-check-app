@@ -19,7 +19,7 @@ class KonsultasiBidan extends StatefulWidget {
 
 class _KonsultasiBidanState extends State<KonsultasiBidan> {
   String _searchQuery = '';
-  bool _isAscending = false; // Default: Terbaru di atas
+  bool _isAscending = false;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -191,14 +191,13 @@ class _KonsultasiBidanState extends State<KonsultasiBidan> {
         ),
         body: Column(
           children: [
-            // BAGIAN FILTER (MIRIPI ADMIN)
             Container(
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -250,7 +249,6 @@ class _KonsultasiBidanState extends State<KonsultasiBidan> {
                 ],
               ),
             ),
-            // STREAM BUILDER
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
@@ -258,12 +256,12 @@ class _KonsultasiBidanState extends State<KonsultasiBidan> {
                     .where('kaderId', isEqualTo: widget.userId)
                     .snapshots(),
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting)
+                  if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
+                  }
 
                   var allDocs = snapshot.data?.docs ?? [];
 
-                  // Filter & Search
                   var filteredDocs = allDocs.where((doc) {
                     var data = doc.data() as Map<String, dynamic>;
                     String judul = (data['judul'] ?? '')
@@ -276,7 +274,6 @@ class _KonsultasiBidanState extends State<KonsultasiBidan> {
                         ortu.contains(_searchQuery.toLowerCase());
                   }).toList();
 
-                  // Sorting
                   filteredDocs.sort((a, b) {
                     var dataA = a.data() as Map<String, dynamic>;
                     var dataB = b.data() as Map<String, dynamic>;

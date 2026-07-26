@@ -28,7 +28,6 @@ class _ChatKonsultasiKaderScreenState extends State<ChatKonsultasiKaderScreen> {
     _msgController.clear();
 
     try {
-      // Menambah data pesan
       await FirebaseFirestore.instance
           .collection('konsultasi')
           .doc(widget.konsultasiId)
@@ -39,7 +38,6 @@ class _ChatKonsultasiKaderScreenState extends State<ChatKonsultasiKaderScreen> {
             'createdAt': FieldValue.serverTimestamp(),
           });
 
-      // Mengupdate lastMessage pada dokumen induk
       await FirebaseFirestore.instance
           .collection('konsultasi')
           .doc(widget.konsultasiId)
@@ -139,11 +137,10 @@ class _ChatKonsultasiKaderScreenState extends State<ChatKonsultasiKaderScreen> {
             ),
           ],
         ),
-        backgroundColor: Colors.blue, // Tema Kader
+        backgroundColor: Colors.blue,
         elevation: 1,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
-          // Mengawasi perubahan dokumen secara real-time pada AppBar
           StreamBuilder<DocumentSnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('konsultasi')
@@ -157,8 +154,9 @@ class _ChatKonsultasiKaderScreenState extends State<ChatKonsultasiKaderScreen> {
                   isClosed = data['isClosed'] == true;
                 }
               }
-              if (isClosed)
-                return const SizedBox(); // Sembunyikan jika sudah ditutup
+              if (isClosed) {
+                return const SizedBox();
+              }
 
               return IconButton(
                 icon: const Icon(Icons.check_circle_outline_rounded),
@@ -212,7 +210,7 @@ class _ChatKonsultasiKaderScreenState extends State<ChatKonsultasiKaderScreen> {
                     var messages = snapshot.data!.docs;
 
                     return ListView.builder(
-                      reverse: true, // Auto scroll to bottom behavior
+                      reverse: true,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 12,
@@ -272,7 +270,6 @@ class _ChatKonsultasiKaderScreenState extends State<ChatKonsultasiKaderScreen> {
                 ),
               ),
 
-              // Menampilkan input chat HANYA jika konsultasi belum ditutup
               if (isClosed)
                 Container(
                   width: double.infinity,

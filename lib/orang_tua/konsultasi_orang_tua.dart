@@ -45,11 +45,9 @@ class KonsultasiOrangTuaScreen extends StatelessWidget {
         elevation: 0,
       ),
       body: StreamBuilder<QuerySnapshot>(
-        // Mengambil data konsultasi khusus milik user ini TANPA orderBy dari Firestore
         stream: FirebaseFirestore.instance
             .collection('konsultasi')
             .where('orangTuaId', isEqualTo: userId)
-            // .orderBy('lastMessageTime', descending: true) // Sengaja dihapus agar terhindar dari error Index
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -64,7 +62,6 @@ class KonsultasiOrangTuaScreen extends StatelessWidget {
             );
           }
 
-          // Menangani kondisi saat riwayat kosong
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return Center(
               child: Column(
@@ -99,13 +96,12 @@ class KonsultasiOrangTuaScreen extends StatelessWidget {
             Timestamp? timeB = dataB['lastMessageTime'];
 
             if (timeA == null && timeB == null) return 0;
-            if (timeA == null)
-              return 1; // Taruh yang null (waktu tidak terdefinisi) di bawah
+            if (timeA == null) {
+              return 1;
+            }
             if (timeB == null) return -1;
 
-            return timeB.compareTo(
-              timeA,
-            ); // Descending (terbaru di posisi atas)
+            return timeB.compareTo(timeA);
           });
 
           return ListView.builder(
@@ -119,8 +115,7 @@ class KonsultasiOrangTuaScreen extends StatelessWidget {
               String kaderName = data['kaderName'] ?? 'Kader';
               String lastMessage = data['lastMessage'] ?? '';
               Timestamp? lastMessageTime = data['lastMessageTime'];
-              bool isClosed =
-                  data['isClosed'] == true; // MENGAMBIL STATUS TUTUP
+              bool isClosed = data['isClosed'] == true;
 
               return Card(
                 elevation: 2,
@@ -132,7 +127,6 @@ class KonsultasiOrangTuaScreen extends StatelessWidget {
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(16),
                   onTap: () {
-                    // Navigasi ke room chat ketika salah satu riwayat diklik
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -195,7 +189,6 @@ class KonsultasiOrangTuaScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  // MENAMBAHKAN Lencana "Selesai" JIKA DITUTUP
                   trailing: isClosed
                       ? Container(
                           padding: const EdgeInsets.symmetric(

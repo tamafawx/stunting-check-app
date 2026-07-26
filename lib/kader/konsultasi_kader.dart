@@ -18,7 +18,7 @@ class KonsultasiKaderScreen extends StatefulWidget {
 
 class _KonsultasiKaderScreenState extends State<KonsultasiKaderScreen> {
   String _searchQuery = '';
-  bool _isAscending = false; // Default: Terbaru di atas
+  bool _isAscending = false;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -190,14 +190,13 @@ class _KonsultasiKaderScreenState extends State<KonsultasiKaderScreen> {
         ),
         body: Column(
           children: [
-            // BAGIAN FILTER (MIRIPI ADMIN)
             Container(
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -249,7 +248,6 @@ class _KonsultasiKaderScreenState extends State<KonsultasiKaderScreen> {
                 ],
               ),
             ),
-            // STREAM BUILDER
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
@@ -257,12 +255,12 @@ class _KonsultasiKaderScreenState extends State<KonsultasiKaderScreen> {
                     .where('kaderId', isEqualTo: widget.userId)
                     .snapshots(),
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting)
+                  if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
+                  }
 
                   var allDocs = snapshot.data?.docs ?? [];
 
-                  // Filter & Search
                   var filteredDocs = allDocs.where((doc) {
                     var data = doc.data() as Map<String, dynamic>;
                     String judul = (data['judul'] ?? '')
@@ -275,7 +273,6 @@ class _KonsultasiKaderScreenState extends State<KonsultasiKaderScreen> {
                         ortu.contains(_searchQuery.toLowerCase());
                   }).toList();
 
-                  // Sorting
                   filteredDocs.sort((a, b) {
                     var dataA = a.data() as Map<String, dynamic>;
                     var dataB = b.data() as Map<String, dynamic>;

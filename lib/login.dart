@@ -1,13 +1,19 @@
+// Halaman untuk login atau masuk user sesuai kredensial dari database.
+
+// Role yang dapat akses:
+// - Guest/All
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'register.dart';
-import 'admin/main_admin.dart';
-import 'kader/main_kader.dart';
-import 'bidan/main_bidan.dart';
-import 'orang_tua/main_orang_tua.dart';
+import 'main_admin.dart';
+import 'main_kader.dart';
+import 'main_bidan.dart';
+import 'main_orang_tua.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -76,6 +82,12 @@ class _LoginState extends State<Login> {
           }
           return;
         }
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', true);
+        await prefs.setString('userId', userId);
+        await prefs.setString('fullName', fullName);
+        await prefs.setString('role', role);
 
         if (mounted) {
           if (role == 'admin') {
@@ -147,7 +159,7 @@ class _LoginState extends State<Login> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Icon(
-                Icons.health_and_safety,
+                Icons.health_and_safety_rounded,
                 size: 80,
                 color: Colors.green,
               ),
@@ -163,7 +175,7 @@ class _LoginState extends State<Login> {
               ),
               const SizedBox(height: 8),
               const Text(
-                "Sign in to continue",
+                "Masuk untuk melanjutkan",
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: Colors.black54),
               ),
@@ -172,9 +184,16 @@ class _LoginState extends State<Login> {
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.email_outlined),
+                  prefixIcon: const Icon(
+                    Icons.email_outlined,
+                    color: Colors.green,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.green, width: 2),
                   ),
                   labelText: 'Email',
                   filled: true,
@@ -186,12 +205,16 @@ class _LoginState extends State<Login> {
                 controller: _passwordController,
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.lock_outline),
+                  prefixIcon: const Icon(
+                    Icons.lock_outline_rounded,
+                    color: Colors.green,
+                  ),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
                           ? Icons.visibility_off
                           : Icons.visibility,
+                      color: Colors.grey,
                     ),
                     onPressed: () {
                       setState(() {
@@ -201,6 +224,10 @@ class _LoginState extends State<Login> {
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.green, width: 2),
                   ),
                   labelText: 'Password',
                   filled: true,
@@ -229,7 +256,7 @@ class _LoginState extends State<Login> {
                         ),
                       )
                     : const Text(
-                        'Login',
+                        'Masuk',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -254,7 +281,7 @@ class _LoginState extends State<Login> {
                       );
                     },
                     child: const Text(
-                      "Buat Akun",
+                      "Daftar Sekarang",
                       style: TextStyle(
                         color: Colors.green,
                         fontWeight: FontWeight.bold,

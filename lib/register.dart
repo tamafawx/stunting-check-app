@@ -1,3 +1,9 @@
+// Halaman untuk mendaftar akun baru untuk aplikasi. Untuk mengganti
+// role user harus melewati dari si admin terlebih dahulu.
+
+// Role yang dapat akses:
+// - Guest/All
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
@@ -13,7 +19,6 @@ class Register extends StatefulWidget {
 class _RegisterState extends State<Register> {
   bool _obscurePassword = true;
   bool _isLoading = false;
-
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -102,7 +107,10 @@ class _RegisterState extends State<Register> {
         elevation: 0,
         backgroundColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.black87,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -113,7 +121,11 @@ class _RegisterState extends State<Register> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Icon(Icons.app_registration, size: 80, color: Colors.green),
+              const Icon(
+                Icons.person_add_alt_1_rounded,
+                size: 80,
+                color: Colors.green,
+              ),
               const SizedBox(height: 24),
               const Text(
                 "Buat Akun",
@@ -134,9 +146,16 @@ class _RegisterState extends State<Register> {
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.badge_outlined),
+                  prefixIcon: const Icon(
+                    Icons.badge_outlined,
+                    color: Colors.green,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.green, width: 2),
                   ),
                   labelText: 'Nama Lengkap',
                   filled: true,
@@ -148,9 +167,16 @@ class _RegisterState extends State<Register> {
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.email_outlined),
+                  prefixIcon: const Icon(
+                    Icons.email_outlined,
+                    color: Colors.green,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.green, width: 2),
                   ),
                   labelText: 'Email',
                   filled: true,
@@ -162,12 +188,16 @@ class _RegisterState extends State<Register> {
                 controller: _passwordController,
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.lock_outline),
+                  prefixIcon: const Icon(
+                    Icons.lock_outline_rounded,
+                    color: Colors.green,
+                  ),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
                           ? Icons.visibility_off
                           : Icons.visibility,
+                      color: Colors.grey,
                     ),
                     onPressed: () {
                       setState(() {
@@ -177,6 +207,10 @@ class _RegisterState extends State<Register> {
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.green, width: 2),
                   ),
                   labelText: 'Password',
                   filled: true,
@@ -205,7 +239,7 @@ class _RegisterState extends State<Register> {
                         ),
                       )
                     : const Text(
-                        'Daftar',
+                        'Daftar Sekarang',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
