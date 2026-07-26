@@ -19,7 +19,6 @@ class InputPengukuran extends StatefulWidget {
 class _InputPengukuranState extends State<InputPengukuran> {
   final _formKey = GlobalKey<FormState>();
 
-  // Variabel untuk menyimpan data balita yang dipilih
   Map<String, dynamic>? _selectedBalita;
 
   final TextEditingController _bbController = TextEditingController();
@@ -100,7 +99,6 @@ class _InputPengukuranState extends State<InputPengukuran> {
           tglLahir = (_selectedBalita!['tanggalLahir'] as Timestamp).toDate();
         }
 
-        // Tanggal pengukuran di-set secara otomatis ke waktu saat ini
         DateTime tanggalPengukuranHariIni = DateTime.now();
 
         String statusStunting = _hitungStatusStunting(
@@ -181,7 +179,6 @@ class _InputPengukuranState extends State<InputPengukuran> {
               ),
               const SizedBox(height: 12),
 
-              // Kartu Pilihan Balita
               InkWell(
                 onTap: _pilihBalita,
                 borderRadius: BorderRadius.circular(16),
@@ -198,7 +195,7 @@ class _InputPengukuranState extends State<InputPengukuran> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.02),
+                        color: Colors.black.withValues(alpha: 0.02),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),
@@ -210,7 +207,7 @@ class _InputPengukuranState extends State<InputPengukuran> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.blue.withOpacity(0.1),
+                                color: Colors.blue.withValues(alpha: 0.1),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -243,8 +240,8 @@ class _InputPengukuranState extends State<InputPengukuran> {
                               backgroundColor:
                                   _selectedBalita!['jenisKelamin'] ==
                                       'Laki-laki'
-                                  ? Colors.blue.withOpacity(0.15)
-                                  : Colors.pink.withOpacity(0.15),
+                                  ? Colors.blue.withValues(alpha: 0.15)
+                                  : Colors.pink.withValues(alpha: 0.15),
                               child: Icon(
                                 Icons.child_care,
                                 color:
@@ -319,7 +316,7 @@ class _InputPengukuranState extends State<InputPengukuran> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
+                      color: Colors.black.withValues(alpha: 0.02),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -364,7 +361,6 @@ class _InputPengukuranState extends State<InputPengukuran> {
 
               const SizedBox(height: 40),
 
-              // Tombol Simpan
               SizedBox(
                 width: double.infinity,
                 height: 54,
@@ -376,7 +372,7 @@ class _InputPengukuranState extends State<InputPengukuran> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     elevation: 4,
-                    shadowColor: Colors.blue.withOpacity(0.4),
+                    shadowColor: Colors.blue.withValues(alpha: 0.4),
                   ),
                   child: _isLoading
                       ? const SizedBox(

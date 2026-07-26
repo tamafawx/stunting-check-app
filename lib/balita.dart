@@ -188,7 +188,7 @@ class _BalitaState extends State<Balita> {
                         borderRadius: BorderRadius.circular(20.0),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
+                            color: Colors.black.withValues(alpha: 0.04),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -204,13 +204,15 @@ class _BalitaState extends State<Balita> {
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: jkColor.withOpacity(0.3),
+                                    color: jkColor.withValues(alpha: 0.3),
                                     width: 2,
                                   ),
                                 ),
                                 child: CircleAvatar(
                                   radius: 30,
-                                  backgroundColor: jkColor.withOpacity(0.1),
+                                  backgroundColor: jkColor.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   backgroundImage:
                                       fotoUrl != null && fotoUrl.isNotEmpty
                                       ? NetworkImage(fotoUrl)
@@ -219,7 +221,7 @@ class _BalitaState extends State<Balita> {
                                       ? Icon(
                                           Icons.child_care_rounded,
                                           size: 36,
-                                          color: jkColor.withOpacity(0.6),
+                                          color: jkColor.withValues(alpha: 0.6),
                                         )
                                       : null,
                                 ),
@@ -308,7 +310,9 @@ class _BalitaState extends State<Balita> {
                                   color: statusBgColor,
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
-                                    color: statusTextColor.withOpacity(0.2),
+                                    color: statusTextColor.withValues(
+                                      alpha: 0.2,
+                                    ),
                                   ),
                                 ),
                                 child: Row(

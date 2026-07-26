@@ -1,5 +1,6 @@
 // Halaman untuk admin menambahkan atau mengedit jadwal kegiatan.
 // Desain modern dengan OpenStreetMap (flutter_map).
+
 // Role yang dapat akses:
 // - Admin
 
@@ -31,9 +32,8 @@ class _FormJadwalAdminScreenState extends State<FormJadwalAdminScreen> {
   TimeOfDay? _waktuSelesai;
   bool _isLoading = false;
 
-  // OpenStreetMap State
   LatLng? _selectedLocation;
-  final LatLng _defaultLocation = const LatLng(-6.8898, 109.6746); // Pekalongan
+  final LatLng _defaultLocation = const LatLng(-6.8898, 109.6746);
 
   @override
   void initState() {
@@ -215,7 +215,7 @@ class _FormJadwalAdminScreenState extends State<FormJadwalAdminScreen> {
                           ),
                           const SizedBox(height: 16),
                           DropdownButtonFormField<String>(
-                            value: _kategori,
+                            initialValue: _kategori,
                             decoration: _inputStyle(
                               label: 'Kategori Kegiatan',
                               icon: Icons.category_rounded,
@@ -268,8 +268,9 @@ class _FormJadwalAdminScreenState extends State<FormJadwalAdminScreen> {
                                   const Duration(days: 365),
                                 ),
                               );
-                              if (picked != null)
+                              if (picked != null) {
                                 setState(() => _tanggal = picked);
+                              }
                             },
                           ),
                           const Divider(height: 24),
@@ -288,8 +289,9 @@ class _FormJadwalAdminScreenState extends State<FormJadwalAdminScreen> {
                                       initialTime:
                                           _waktuMulai ?? TimeOfDay.now(),
                                     );
-                                    if (time != null)
+                                    if (time != null) {
                                       setState(() => _waktuMulai = time);
+                                    }
                                   },
                                 ),
                               ),
@@ -312,8 +314,9 @@ class _FormJadwalAdminScreenState extends State<FormJadwalAdminScreen> {
                                       initialTime:
                                           _waktuSelesai ?? TimeOfDay.now(),
                                     );
-                                    if (time != null)
+                                    if (time != null) {
                                       setState(() => _waktuSelesai = time);
+                                    }
                                   },
                                 ),
                               ),
@@ -414,7 +417,7 @@ class _FormJadwalAdminScreenState extends State<FormJadwalAdminScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 100), // Spacing for floating button
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),
