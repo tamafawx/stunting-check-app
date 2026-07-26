@@ -26,6 +26,7 @@ from firebase_admin import initialize_app, messaging
 initialize_app()
 
 from notifikasi_pengumuman import kirim_notifikasi_pengumuman
+from notifikasi_edukasi import kirim_notifikasi_edukasi
 from stunting_calc import proses_kalkulasi_stunting
 
 

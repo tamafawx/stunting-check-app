@@ -25,9 +25,12 @@ class DetailEdukasi extends StatelessWidget {
     String namaPenulis = data['namaPenulis'] ?? 'Kader';
     String fotoPenulis = data['fotoPenulis'] ?? '';
     String rolePenulis = data['rolePenulis'] ?? 'Kader Posyandu';
-    Timestamp? createdAt = data['createdAt'];
 
+    String kategoriStatus = data['kategoriStatus'] ?? 'Semua (Umum)';
+
+    Timestamp? createdAt = data['createdAt'];
     String tanggal = '-';
+
     if (createdAt != null) {
       DateTime dt = createdAt.toDate();
       List<String> bulan = [
@@ -171,7 +174,7 @@ class DetailEdukasi extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 20),
                   Text(
                     konten,
                     style: const TextStyle(
@@ -181,7 +184,41 @@ class DetailEdukasi extends StatelessWidget {
                     ),
                     textAlign: TextAlign.justify,
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: themeColor.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: themeColor.withValues(alpha: 0.15),
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.lightbulb_outline_rounded,
+                          color: themeColor,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            kategoriStatus == 'Semua (Umum)'
+                                ? "Informasi edukasi ini disarankan dan mungkin membantu perkembangan balita anda."
+                                : "Jika anak terkena status $kategoriStatus, berita ini mungkin membantu anda.",
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[800],
+                              fontStyle: FontStyle.italic,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),

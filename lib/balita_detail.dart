@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
+
 import 'balita_edit.dart';
+import 'edukasi_detail.dart';
+import 'edukasi.dart';
 
 class DetailBalita extends StatefulWidget {
   final String docId;
@@ -73,8 +76,8 @@ class _DetailBalitaState extends State<DetailBalita>
 
   String _calculateAge(dynamic birthDateData) {
     if (birthDateData == null) return "-";
-
     DateTime birthDate;
+
     if (birthDateData is Timestamp) {
       birthDate = birthDateData.toDate();
     } else if (birthDateData is String) {
@@ -104,6 +107,214 @@ class _DetailBalitaState extends State<DetailBalita>
       return "$months bln";
     }
     return "$years th $months bln";
+  }
+
+  Widget _buildRekomendasiEdukasi(String currentStatus) {
+    String mappedStatus = 'Aman';
+    if (currentStatus.toLowerCase().contains("tinggi") ||
+        currentStatus.toLowerCase().contains("sangat pendek")) {
+      mappedStatus = 'Risiko Tinggi';
+    } else if (currentStatus.toLowerCase().contains("sedang") ||
+        currentStatus.toLowerCase().contains("pendek") ||
+        currentStatus.toLowerCase().contains("rendah")) {
+      mappedStatus = 'Risiko Rendah';
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "Rekomendasi Edukasi",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        Edukasi(userId: '', fullName: '', role: widget.role),
+                  ),
+                );
+              },
+              child: Text(
+                "Lihat Semua",
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: themeColor,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('edukasi')
+              .where('kategoriStatus', whereIn: ['Semua (Umum)', mappedStatus])
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.menu_book_rounded, color: Colors.grey),
+                    SizedBox(width: 12),
+                    Text(
+                      "Belum ada edukasi terkait.",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            var docs = snapshot.data!.docs;
+
+            docs.sort((a, b) {
+              var dataA = a.data() as Map<String, dynamic>;
+              var dataB = b.data() as Map<String, dynamic>;
+              Timestamp tA =
+                  dataA['createdAt'] ?? Timestamp.fromMillisecondsSinceEpoch(0);
+              Timestamp tB =
+                  dataB['createdAt'] ?? Timestamp.fromMillisecondsSinceEpoch(0);
+              return tB.compareTo(tA);
+            });
+
+            var topDocs = docs.take(3).toList();
+
+            return Column(
+              children: topDocs.map((doc) {
+                var data = doc.data() as Map<String, dynamic>;
+                String judul = data['judul'] ?? 'Tanpa Judul';
+                String imageUrl = data['imageUrl'] ?? '';
+                String tanggal = '-';
+
+                if (data['createdAt'] != null) {
+                  DateTime dt = (data['createdAt'] as Timestamp).toDate();
+                  tanggal =
+                      "${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}";
+                }
+
+                return InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            DetailEdukasi(data: data, role: widget.role),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[200]!),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.02),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(12),
+                            bottomLeft: Radius.circular(12),
+                          ),
+                          child: Container(
+                            width: 80,
+                            height: 80,
+                            color: Colors.grey[200],
+                            child: imageUrl.isNotEmpty
+                                ? Image.network(
+                                    imageUrl,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (ctx, err, stack) =>
+                                        const Icon(
+                                          Icons.broken_image,
+                                          color: Colors.grey,
+                                        ),
+                                  )
+                                : const Icon(Icons.image, color: Colors.grey),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 8.0,
+                              horizontal: 8.0,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  judul,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: Colors.black87,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.calendar_today_rounded,
+                                      size: 12,
+                                      color: Colors.grey[500],
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      tanggal,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey[500],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            );
+          },
+        ),
+      ],
+    );
   }
 
   @override
@@ -288,7 +499,6 @@ class _DetailBalitaState extends State<DetailBalita>
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-
         if (snapshot.hasError) {
           return Center(
             child: Text(
@@ -298,7 +508,6 @@ class _DetailBalitaState extends State<DetailBalita>
             ),
           );
         }
-
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Center(
             child: Column(
@@ -332,9 +541,7 @@ class _DetailBalitaState extends State<DetailBalita>
           Timestamp tB = dataB['tanggal'] ?? Timestamp.now();
           return tB.compareTo(tA);
         });
-
         var latestDoc = docs.first.data() as Map<String, dynamic>;
-
         String berat = latestDoc['beratBadan'] != null
             ? "${latestDoc['beratBadan']} kg"
             : "-";
@@ -347,7 +554,6 @@ class _DetailBalitaState extends State<DetailBalita>
         String lengan = latestDoc['lingkarLengan'] != null
             ? "${latestDoc['lingkarLengan']} cm"
             : "-";
-
         String tglPemeriksaan = "-";
         if (latestDoc['tanggal'] != null) {
           Timestamp t = latestDoc['tanggal'];
@@ -357,7 +563,6 @@ class _DetailBalitaState extends State<DetailBalita>
         }
 
         String statusStunting = latestDoc['statusStunting'] ?? "Memproses...";
-
         Color alertColor = Colors.green;
         Color bgColor = Colors.green.shade50;
         Color borderColor = Colors.green.shade200;
@@ -525,6 +730,8 @@ class _DetailBalitaState extends State<DetailBalita>
                 ),
               ),
               const SizedBox(height: 24),
+              _buildRekomendasiEdukasi(statusStunting),
+              const SizedBox(height: 24),
             ],
           ),
         );
@@ -542,7 +749,6 @@ class _DetailBalitaState extends State<DetailBalita>
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-
         if (snapshot.hasError) {
           return Center(
             child: Text(
@@ -552,7 +758,6 @@ class _DetailBalitaState extends State<DetailBalita>
             ),
           );
         }
-
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Center(
             child: Column(
@@ -590,7 +795,6 @@ class _DetailBalitaState extends State<DetailBalita>
             DateTime dt = (doc['tanggal'] as Timestamp).toDate();
             String formattedDate =
                 "${dt.day.toString().padLeft(2, '0')} ${_getMonthName(dt.month)} ${dt.year}";
-
             String statusRiwayat = doc['statusStunting'] ?? "Memproses...";
             Color bgStatusColor = Colors.grey.shade100;
             Color textStatusColor = Colors.grey.shade600;
@@ -724,7 +928,6 @@ class _DetailBalitaState extends State<DetailBalita>
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return const Center(
             child: Text(
@@ -748,7 +951,6 @@ class _DetailBalitaState extends State<DetailBalita>
           var data = docs[i].data() as Map<String, dynamic>;
           double berat = double.tryParse(data['beratBadan'].toString()) ?? 0;
           double tinggi = double.tryParse(data['tinggiBadan'].toString()) ?? 0;
-
           beratSpots.add(FlSpot(i.toDouble(), berat));
           tinggiSpots.add(FlSpot(i.toDouble(), tinggi));
         }

@@ -11,7 +11,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'edukasi_detail.dart';
 import 'edukasi_tambah.dart';
 
@@ -34,6 +33,7 @@ class Edukasi extends StatefulWidget {
 class _EdukasiState extends State<Edukasi> {
   String _searchQuery = '';
   String _selectedSort = 'Terbaru';
+  String _selectedTarget = 'Semua Target';
   bool _isListView = false;
   final TextEditingController _searchController = TextEditingController();
 
@@ -181,6 +181,7 @@ class _EdukasiState extends State<Edukasi> {
               ],
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 TextField(
                   controller: _searchController,
@@ -213,69 +214,147 @@ class _EdukasiState extends State<Edukasi> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.sort_rounded,
-                          color: Colors.grey,
-                          size: 20,
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 2,
                         ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Urutkan:',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        const SizedBox(width: 8),
-                        DropdownButton<String>(
-                          value: _selectedSort,
-                          underline: const SizedBox(),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.filter_alt_rounded,
+                              color: mainThemeColor,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 6),
+                            DropdownButton<String>(
+                              value: _selectedTarget,
+                              underline: const SizedBox(),
+                              icon: const Icon(
+                                Icons.arrow_drop_down,
+                                color: Colors.grey,
+                              ),
+                              style: const TextStyle(
+                                color: Colors.black87,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                              onChanged: (String? newValue) {
+                                if (newValue != null) {
+                                  setState(() {
+                                    _selectedTarget = newValue;
+                                  });
+                                }
+                              },
+                              items:
+                                  <String>[
+                                    'Semua Target',
+                                    'Semua (Umum)',
+                                    'Aman',
+                                    'Risiko Rendah',
+                                    'Risiko Tinggi',
+                                  ].map<DropdownMenuItem<String>>((
+                                    String value,
+                                  ) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(value),
+                                    );
+                                  }).toList(),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.sort_rounded,
+                              color: Colors.grey,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 6),
+                            DropdownButton<String>(
+                              value: _selectedSort,
+                              underline: const SizedBox(),
+                              icon: const Icon(
+                                Icons.arrow_drop_down,
+                                color: Colors.grey,
+                              ),
+                              style: const TextStyle(
+                                color: Colors.black87,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                              onChanged: (String? newValue) {
+                                if (newValue != null) {
+                                  setState(() {
+                                    _selectedSort = newValue;
+                                  });
+                                }
+                              },
+                              items:
+                                  <String>[
+                                    'Terbaru',
+                                    'Terlama',
+                                    'A-Z',
+                                    'Z-A',
+                                  ].map<DropdownMenuItem<String>>((
+                                    String value,
+                                  ) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(value),
+                                    );
+                                  }).toList(),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: IconButton(
                           icon: Icon(
-                            Icons.arrow_drop_down,
+                            _isListView
+                                ? Icons.grid_view_rounded
+                                : Icons.view_list_rounded,
                             color: mainThemeColor,
                           ),
-                          style: const TextStyle(
-                            color: Colors.black87,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          onChanged: (String? newValue) {
-                            if (newValue != null) {
-                              setState(() {
-                                _selectedSort = newValue;
-                              });
-                            }
+                          tooltip: 'Ubah Tampilan',
+                          onPressed: () {
+                            setState(() {
+                              _isListView = !_isListView;
+                            });
                           },
-                          items: <String>['Terbaru', 'Terlama', 'A-Z', 'Z-A']
-                              .map<DropdownMenuItem<String>>((String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value),
-                                );
-                              })
-                              .toList(),
                         ),
-                      ],
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        _isListView
-                            ? Icons.grid_view_rounded
-                            : Icons.view_list_rounded,
-                        color: mainThemeColor,
                       ),
-                      tooltip: 'Ubah Tampilan',
-                      onPressed: () {
-                        setState(() {
-                          _isListView = !_isListView;
-                        });
-                      },
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -304,13 +383,20 @@ class _EdukasiState extends State<Edukasi> {
                 var filteredEdukasi = rawEdukasi.where((doc) {
                   var data = doc.data() as Map<String, dynamic>;
                   String judul = (data['judul'] ?? '').toString().toLowerCase();
-                  return judul.contains(_searchQuery.toLowerCase());
+                  String targetStatus =
+                      data['kategoriStatus'] ?? 'Semua (Umum)';
+
+                  bool matchSearch = judul.contains(_searchQuery.toLowerCase());
+                  bool matchTarget =
+                      _selectedTarget == 'Semua Target' ||
+                      targetStatus == _selectedTarget;
+
+                  return matchSearch && matchTarget;
                 }).toList();
 
                 filteredEdukasi.sort((a, b) {
                   var dataA = a.data() as Map<String, dynamic>;
                   var dataB = b.data() as Map<String, dynamic>;
-
                   if (_selectedSort == 'A-Z') {
                     String titleA = (dataA['judul'] ?? '')
                         .toString()
@@ -357,20 +443,17 @@ class _EdukasiState extends State<Edukasi> {
                     var document = filteredEdukasi[index];
                     var data = document.data() as Map<String, dynamic>;
                     String docId = document.id;
-
                     String judul = data['judul'] ?? 'Tanpa Judul';
                     String namaPenulis = data['namaPenulis'] ?? 'Kader';
                     String penulisId = data['penulisId'] ?? '';
                     String imageUrl = data['imageUrl'] ?? '';
                     String fotoPenulis = data['fotoPenulis'] ?? '';
-
                     Timestamp? createdAt = data['createdAt'];
                     String tanggal = '-';
                     if (createdAt != null) {
                       DateTime dt = createdAt.toDate();
                       tanggal = "${dt.day}/${dt.month}/${dt.year}";
                     }
-
                     bool canDelete =
                         (widget.role == 'admin') ||
                         ((widget.role == 'kader' || widget.role == 'bidan') &&

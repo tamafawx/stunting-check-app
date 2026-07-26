@@ -31,8 +31,11 @@ class _TambahEdukasiState extends State<TambahEdukasi> {
   final _formKey = GlobalKey<FormState>();
   final _judulController = TextEditingController();
   final _kontenController = TextEditingController();
-  final ImagePicker _picker = ImagePicker();
 
+  // Variabel untuk Metadata Tambahan
+  String _kategoriStatus = 'Semua (Umum)';
+
+  final ImagePicker _picker = ImagePicker();
   File? _imageFile;
   bool _isLoading = false;
   String? _fotoProfilPenulis;
@@ -56,6 +59,7 @@ class _TambahEdukasiState extends State<TambahEdukasi> {
           .collection('users')
           .doc(widget.userId)
           .get();
+
       if (userDoc.exists && mounted) {
         setState(() {
           _fotoProfilPenulis =
@@ -73,6 +77,7 @@ class _TambahEdukasiState extends State<TambahEdukasi> {
         maxHeight: 600,
         imageQuality: 70,
       );
+
       if (pickedFile != null) {
         setState(() {
           _imageFile = File(pickedFile.path);
@@ -92,11 +97,13 @@ class _TambahEdukasiState extends State<TambahEdukasi> {
 
   Future<String?> _uploadImage() async {
     if (_imageFile == null) return null;
+
     try {
       final ref = FirebaseStorage.instance
           .ref()
           .child('edukasi_images')
           .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
+
       await ref.putFile(_imageFile!);
       return await ref.getDownloadURL();
     } catch (e) {
@@ -115,10 +122,11 @@ class _TambahEdukasiState extends State<TambahEdukasi> {
         );
         return;
       }
+
       setState(() => _isLoading = true);
+
       try {
         String? imageUrl = await _uploadImage();
-
         String fallbackName = widget.role.isNotEmpty
             ? widget.role[0].toUpperCase() + widget.role.substring(1)
             : 'Penulis';
@@ -133,6 +141,8 @@ class _TambahEdukasiState extends State<TambahEdukasi> {
               : fallbackName,
           'fotoPenulis': _fotoProfilPenulis ?? '',
           'rolePenulis': widget.role,
+          'kategoriStatus':
+              _kategoriStatus, // Menyimpan data metadata ke database
           'createdAt': FieldValue.serverTimestamp(),
         });
 
@@ -337,6 +347,7 @@ class _TambahEdukasiState extends State<TambahEdukasi> {
                       ),
                     ),
                     const SizedBox(height: 24),
+
                     Text(
                       'Informasi Detail',
                       style: TextStyle(
@@ -456,7 +467,121 @@ class _TambahEdukasiState extends State<TambahEdukasi> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 24),
+
+                    // --- SECTION METADATA TAMBAHAN ---
+                    Text(
+                      'Metadata Tambahan',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: themeColor,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Target Status Balita',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFAFBFC),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.grey.shade300),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: themeColor.withValues(alpha: 0.05),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 6,
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: _kategoriStatus,
+                                isExpanded: true,
+                                icon: Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  color: themeColor,
+                                  size: 28,
+                                ),
+                                dropdownColor: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                style: const TextStyle(
+                                  color: Colors.black87,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                items:
+                                    [
+                                      'Semua (Umum)',
+                                      'Aman',
+                                      'Risiko Rendah',
+                                      'Risiko Tinggi',
+                                    ].map((status) {
+                                      return DropdownMenuItem<String>(
+                                        value: status,
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(6),
+                                              decoration: BoxDecoration(
+                                                color: themeColor.withValues(
+                                                  alpha: 0.1,
+                                                ),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Icon(
+                                                Icons.health_and_safety_rounded,
+                                                size: 16,
+                                                color: themeColor,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Text(status),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                onChanged: (val) {
+                                  if (val != null) {
+                                    setState(() => _kategoriStatus = val);
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 32),
+
                     ElevatedButton(
                       onPressed: _simpanEdukasi,
                       style: ElevatedButton.styleFrom(
