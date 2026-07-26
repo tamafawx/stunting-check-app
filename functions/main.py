@@ -25,29 +25,7 @@ from firebase_admin import initialize_app, messaging
 
 initialize_app()
 
-@firestore_fn.on_document_created(document="pengumuman/{docId}")
-def kirim_notifikasi_pengumuman(event: firestore_fn.Event[firestore_fn.DocumentSnapshot | None]) -> None:
-    if event.data is None:
-        return
+from notifikasi_pengumuman import kirim_notifikasi_pengumuman
+from stunting_calc import proses_kalkulasi_stunting
 
-    data = event.data.to_dict()
-    judul = data.get("judul", "Pengumuman Baru")
-    konten = data.get("konten", "Ada informasi terbaru dari Posyandu.")
 
-    message = messaging.Message(
-        notification=messaging.Notification(
-            title=judul,
-            body=konten,
-        ),
-        data={
-            "click_action": "FLUTTER_NOTIFICATION_CLICK",
-            "pengumumanId": event.params["docId"],
-        },
-        topic="all_users",
-    )
-
-    try:
-        response = messaging.send(message)
-        print(response)
-    except Exception as e:
-        print(e)

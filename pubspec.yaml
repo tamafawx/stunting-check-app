@@ -36,6 +36,8 @@ dependencies:
   firebase_storage: ^13.4.3
   firebase_messaging: ^16.4.3
 
+  pdf: ^3.13.0
+  printing: ^5.15.0
   flutter_launcher_icons: ^0.14.4
   shared_preferences: ^2.5.5
   flutter_local_notifications:

@@ -3,8 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'balita_tambah.dart';
 import 'balita_detail.dart';
 
+import 'balita_laporan.dart';
+
 class KelolaBalita extends StatefulWidget {
-  final String role; // Tambahan parameter role
+  final String role;
   const KelolaBalita({super.key, required this.role});
 
   @override
@@ -187,6 +189,23 @@ class _KelolaBalitaState extends State<KelolaBalita> {
         backgroundColor: themeColor,
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          if (widget.role == 'admin' || widget.role == 'kader')
+            IconButton(
+              icon: const Icon(Icons.picture_as_pdf_rounded),
+              tooltip: 'Unduh Laporan Balita',
+              onPressed: () {
+                // Ini fungsi untuk berpindah ke halaman laporan
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const LaporanBalitaScreen(),
+                  ),
+                );
+              },
+            ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -632,7 +651,6 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                                             ),
                                           ),
                                         ),
-                                        // Opsi Hapus hanya muncul untuk Kader
                                         if (widget.role == 'kader') ...[
                                           const SizedBox(width: 4),
                                           PopupMenuButton<String>(
@@ -690,7 +708,6 @@ class _KelolaBalitaState extends State<KelolaBalita> {
           );
         },
       ),
-      // Tombol Tambah Data hanya muncul untuk Kader
       floatingActionButton: widget.role == 'kader'
           ? FloatingActionButton(
               onPressed: () {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:fl_chart/fl_chart.dart';
 import 'balita_edit.dart';
 
 class DetailBalita extends StatefulWidget {
@@ -25,7 +25,6 @@ class _DetailBalitaState extends State<DetailBalita>
   Map<String, dynamic> _balitaData = {};
   bool _isLoading = true;
 
-  // Setel warna dinamis berdasarkan role
   Color get themeColor => widget.role == 'bidan' ? Colors.purple : Colors.blue;
 
   @override
@@ -74,6 +73,7 @@ class _DetailBalitaState extends State<DetailBalita>
 
   String _calculateAge(dynamic birthDateData) {
     if (birthDateData == null) return "-";
+
     DateTime birthDate;
     if (birthDateData is Timestamp) {
       birthDate = birthDateData.toDate();
@@ -82,13 +82,16 @@ class _DetailBalitaState extends State<DetailBalita>
     } else {
       return "-";
     }
+
     DateTime now = DateTime.now();
     int years = now.year - birthDate.year;
     int months = now.month - birthDate.month;
+
     if (months < 0) {
       years--;
       months += 12;
     }
+
     if (now.day < birthDate.day) {
       months--;
       if (months < 0) {
@@ -96,6 +99,7 @@ class _DetailBalitaState extends State<DetailBalita>
         months += 11;
       }
     }
+
     if (years == 0) {
       return "$months bln";
     }
@@ -112,7 +116,6 @@ class _DetailBalitaState extends State<DetailBalita>
       _balitaData['tanggalLahir'] ?? widget.data['tanggalLahir'],
     );
     final String idBalita = "BLT-${widget.docId.substring(0, 5).toUpperCase()}";
-
     final String? fotoUrl = _balitaData['fotoUrl'] ?? widget.data['fotoUrl'];
 
     return Scaffold(
@@ -131,7 +134,6 @@ class _DetailBalitaState extends State<DetailBalita>
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
         actions: [
-          // Tombol Edit HANYA jika kader
           if (widget.role == 'kader')
             IconButton(
               icon: const Icon(Icons.edit_outlined, color: Colors.black87),
@@ -286,6 +288,7 @@ class _DetailBalitaState extends State<DetailBalita>
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
+
         if (snapshot.hasError) {
           return Center(
             child: Text(
@@ -295,6 +298,7 @@ class _DetailBalitaState extends State<DetailBalita>
             ),
           );
         }
+
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Center(
             child: Column(
@@ -330,6 +334,7 @@ class _DetailBalitaState extends State<DetailBalita>
         });
 
         var latestDoc = docs.first.data() as Map<String, dynamic>;
+
         String berat = latestDoc['beratBadan'] != null
             ? "${latestDoc['beratBadan']} kg"
             : "-";
@@ -342,6 +347,7 @@ class _DetailBalitaState extends State<DetailBalita>
         String lengan = latestDoc['lingkarLengan'] != null
             ? "${latestDoc['lingkarLengan']} cm"
             : "-";
+
         String tglPemeriksaan = "-";
         if (latestDoc['tanggal'] != null) {
           Timestamp t = latestDoc['tanggal'];
@@ -350,8 +356,7 @@ class _DetailBalitaState extends State<DetailBalita>
               "${dt.day.toString().padLeft(2, '0')} ${_getMonthName(dt.month)} ${dt.year}";
         }
 
-        String statusStunting =
-            latestDoc['statusStunting'] ?? "Tidak Diketahui";
+        String statusStunting = latestDoc['statusStunting'] ?? "Memproses...";
 
         Color alertColor = Colors.green;
         Color bgColor = Colors.green.shade50;
@@ -369,7 +374,8 @@ class _DetailBalitaState extends State<DetailBalita>
           saranText =
               "Sangat disarankan untuk segera konsultasi dengan bidan atau dokter anak.";
         } else if (statusStunting.toLowerCase().contains("risiko sedang") ||
-            statusStunting.toLowerCase().contains("pendek")) {
+            statusStunting.toLowerCase().contains("pendek") ||
+            statusStunting.toLowerCase().contains("risiko rendah")) {
           alertColor = Colors.orange;
           bgColor = Colors.orange.shade50;
           borderColor = Colors.orange.shade200;
@@ -488,12 +494,6 @@ class _DetailBalitaState extends State<DetailBalita>
                         ],
                       ),
                     ),
-                    if (alertColor == Colors.redAccent)
-                      SizedBox(
-                        width: 60,
-                        height: 30,
-                        child: CustomPaint(painter: SparklinePainter()),
-                      ),
                   ],
                 ),
               ),
@@ -542,6 +542,7 @@ class _DetailBalitaState extends State<DetailBalita>
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
+
         if (snapshot.hasError) {
           return Center(
             child: Text(
@@ -551,6 +552,7 @@ class _DetailBalitaState extends State<DetailBalita>
             ),
           );
         }
+
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Center(
             child: Column(
@@ -589,6 +591,25 @@ class _DetailBalitaState extends State<DetailBalita>
             String formattedDate =
                 "${dt.day.toString().padLeft(2, '0')} ${_getMonthName(dt.month)} ${dt.year}";
 
+            String statusRiwayat = doc['statusStunting'] ?? "Memproses...";
+            Color bgStatusColor = Colors.grey.shade100;
+            Color textStatusColor = Colors.grey.shade600;
+
+            if (statusRiwayat.toLowerCase().contains("tinggi") ||
+                statusRiwayat.toLowerCase().contains("sangat pendek")) {
+              bgStatusColor = Colors.red.shade50;
+              textStatusColor = Colors.red;
+            } else if (statusRiwayat.toLowerCase().contains("sedang") ||
+                statusRiwayat.toLowerCase().contains("pendek") ||
+                statusRiwayat.toLowerCase().contains("rendah")) {
+              bgStatusColor = Colors.orange.shade50;
+              textStatusColor = Colors.orange;
+            } else if (statusRiwayat.toLowerCase().contains("aman") ||
+                statusRiwayat.toLowerCase().contains("normal")) {
+              bgStatusColor = Colors.green.shade50;
+              textStatusColor = Colors.green;
+            }
+
             return Container(
               margin: const EdgeInsets.only(bottom: 16),
               padding: const EdgeInsets.all(16),
@@ -623,14 +644,14 @@ class _DetailBalitaState extends State<DetailBalita>
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.grey[100],
+                          color: bgStatusColor,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          "Pemeriksa: Kader",
+                          statusRiwayat,
                           style: TextStyle(
                             fontSize: 10,
-                            color: Colors.grey[600],
+                            color: textStatusColor,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -694,42 +715,161 @@ class _DetailBalitaState extends State<DetailBalita>
   }
 
   Widget _buildGrafikTab() {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      key: const ValueKey("ChartContainer"),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey[100]!),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('pemeriksaan')
+          .where('balitaId', isEqualTo: widget.docId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Center(
+            child: Text(
+              "Data belum memadai untuk membentuk grafik",
+              style: TextStyle(color: Colors.black54),
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Kurva Pertumbuhan (Tinggi Badan / Usia)",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          );
+        }
+
+        var docs = snapshot.data!.docs;
+        docs.sort((a, b) {
+          Timestamp tA = (a.data() as Map)['tanggal'] ?? Timestamp.now();
+          Timestamp tB = (b.data() as Map)['tanggal'] ?? Timestamp.now();
+          return tA.compareTo(tB);
+        });
+
+        List<FlSpot> beratSpots = [];
+        List<FlSpot> tinggiSpots = [];
+
+        for (int i = 0; i < docs.length; i++) {
+          var data = docs[i].data() as Map<String, dynamic>;
+          double berat = double.tryParse(data['beratBadan'].toString()) ?? 0;
+          double tinggi = double.tryParse(data['tinggiBadan'].toString()) ?? 0;
+
+          beratSpots.add(FlSpot(i.toDouble(), berat));
+          tinggiSpots.add(FlSpot(i.toDouble(), tinggi));
+        }
+
+        return Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey[100]!),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.02),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: CustomPaint(
-                size: Size.infinite,
-                painter: GrowthChartPainter(
-                  themeColor: themeColor,
-                ), // Pass themeColor ke Canvas Painter
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  "Kurva Pertumbuhan Balita",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Expanded(
+                  child: LineChart(
+                    LineChartData(
+                      maxY: 150.0,
+                      minY: 0,
+                      gridData: const FlGridData(show: true),
+                      titlesData: FlTitlesData(
+                        topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            interval: 1,
+                            getTitlesWidget: (value, meta) {
+                              if (value % 1 == 0) {
+                                return Text(
+                                  value.toInt().toString(),
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          ),
+                        ),
+                      ),
+                      borderData: FlBorderData(
+                        show: true,
+                        border: Border.all(
+                          color: Colors.grey.shade300,
+                          width: 1,
+                        ),
+                      ),
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: tinggiSpots,
+                          isCurved: true,
+                          color: Colors.blue,
+                          barWidth: 3,
+                          isStrokeCapRound: true,
+                          dotData: const FlDotData(show: true),
+                          belowBarData: BarAreaData(
+                            show: true,
+                            color: Colors.blue.withValues(alpha: 0.1),
+                          ),
+                        ),
+                        LineChartBarData(
+                          spots: beratSpots,
+                          isCurved: true,
+                          color: Colors.green,
+                          barWidth: 3,
+                          isStrokeCapRound: true,
+                          dotData: const FlDotData(show: true),
+                          belowBarData: BarAreaData(
+                            show: true,
+                            color: Colors.green.withValues(alpha: 0.1),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(width: 12, height: 12, color: Colors.blue),
+                    const SizedBox(width: 4),
+                    const Text(
+                      "Tinggi Badan (cm)",
+                      style: TextStyle(fontSize: 10),
+                    ),
+                    const SizedBox(width: 16),
+                    Container(width: 12, height: 12, color: Colors.green),
+                    const SizedBox(width: 4),
+                    const Text(
+                      "Berat Badan (kg)",
+                      style: TextStyle(fontSize: 10),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -806,127 +946,4 @@ class _DetailBalitaState extends State<DetailBalita>
     }
     return "";
   }
-}
-
-class SparklinePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paintLine = Paint()
-      ..color = Colors.redAccent
-      ..strokeWidth = 2.0
-      ..style = PaintingStyle.stroke;
-    final paintDot = Paint()
-      ..color = Colors.redAccent
-      ..style = PaintingStyle.fill;
-    final path = Path()
-      ..moveTo(0, size.height * 0.3)
-      ..lineTo(size.width * 0.3, size.height * 0.7)
-      ..lineTo(size.width * 0.6, size.height * 0.5)
-      ..lineTo(size.width, size.height * 0.4);
-    canvas.drawPath(path, paintLine);
-    canvas.drawCircle(Offset(0, size.height * 0.3), 3, paintDot);
-    canvas.drawCircle(Offset(size.width * 0.3, size.height * 0.7), 3, paintDot);
-    canvas.drawCircle(Offset(size.width * 0.6, size.height * 0.5), 3, paintDot);
-    canvas.drawCircle(Offset(size.width, size.height * 0.4), 3, paintDot);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class GrowthChartPainter extends CustomPainter {
-  final Color themeColor;
-
-  GrowthChartPainter({required this.themeColor});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paintGrid = Paint()
-      ..color = Colors.grey[200]!
-      ..strokeWidth = 1.0;
-
-    for (int i = 1; i < 5; i++) {
-      double x = size.width * (i / 5);
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paintGrid);
-    }
-    for (int i = 1; i < 5; i++) {
-      double y = size.height * (i / 5);
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paintGrid);
-    }
-
-    final greenLimitPaint = Paint()
-      ..color = Colors.green.withValues(alpha: 0.3)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-    final redLimitPaint = Paint()
-      ..color = Colors.red.withValues(alpha: 0.3)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
-    final pathUpper = Path()
-      ..moveTo(0, size.height * 0.8)
-      ..cubicTo(
-        size.width * 0.3,
-        size.height * 0.5,
-        size.width * 0.7,
-        size.height * 0.25,
-        size.width,
-        size.height * 0.1,
-      );
-    final pathLower = Path()
-      ..moveTo(0, size.height * 0.95)
-      ..cubicTo(
-        size.width * 0.3,
-        size.height * 0.75,
-        size.width * 0.7,
-        size.height * 0.55,
-        size.width,
-        size.height * 0.4,
-      );
-
-    canvas.drawPath(pathUpper, greenLimitPaint);
-    canvas.drawPath(pathLower, redLimitPaint);
-
-    final babyPaint = Paint()
-      ..color =
-          themeColor // Warna garis mengikuti role
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke;
-    final babyDotPaint = Paint()
-      ..color = themeColor
-      ..style = PaintingStyle.fill;
-
-    final babyPath = Path()
-      ..moveTo(0, size.height * 0.9)
-      ..lineTo(size.width * 0.2, size.height * 0.78)
-      ..lineTo(size.width * 0.4, size.height * 0.72)
-      ..lineTo(size.width * 0.6, size.height * 0.62)
-      ..lineTo(size.width * 0.8, size.height * 0.65);
-
-    canvas.drawPath(babyPath, babyPaint);
-    canvas.drawCircle(Offset(0, size.height * 0.9), 4, babyDotPaint);
-    canvas.drawCircle(
-      Offset(size.width * 0.2, size.height * 0.78),
-      4,
-      babyDotPaint,
-    );
-    canvas.drawCircle(
-      Offset(size.width * 0.4, size.height * 0.72),
-      4,
-      babyDotPaint,
-    );
-    canvas.drawCircle(
-      Offset(size.width * 0.6, size.height * 0.62),
-      4,
-      babyDotPaint,
-    );
-    canvas.drawCircle(
-      Offset(size.width * 0.8, size.height * 0.65),
-      5,
-      babyDotPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
