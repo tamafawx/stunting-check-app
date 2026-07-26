@@ -7,8 +7,9 @@ def kirim_notifikasi_edukasi(event: firestore_fn.Event[firestore_fn.DocumentSnap
         return
 
     data = event.data.to_dict()
+    
     judul_asli = data.get("judul", "Edukasi Baru")
-    judul_notifikasi = f"[ Edukasi ] {judul_asli}"
+    judul_notifikasi = f"[ EDUKASI ] {judul_asli}"
     
     konten_asli = data.get("konten", "Ada materi edukasi terbaru.")
     baris_konten = konten_asli.splitlines()

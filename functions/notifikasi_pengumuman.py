@@ -7,13 +7,18 @@ def kirim_notifikasi_pengumuman(event: firestore_fn.Event[firestore_fn.DocumentS
         return
 
     data = event.data.to_dict()
-    judul = data.get("judul", "Pengumuman Baru")
-    konten = data.get("konten", "Ada informasi terbaru dari Posyandu.")
+
+    judul_asli = data.get("judul", "Pengumuman Baru")
+    judul_notifikasi = f"[ PENGUMUMAN ] {judul_asli}"
+
+    konten_asli = data.get("konten", "Ada informasi terbaru dari Posyandu.")
+    baris_konten = konten_asli.splitlines()
+    konten_notifikasi = "\n".join(baris_konten[:2])
 
     message = messaging.Message(
         notification=messaging.Notification(
-            title=judul,
-            body=konten,
+            title=judul_notifikasi,
+            body=konten_notifikasi,
         ),
         data={
             "click_action": "FLUTTER_NOTIFICATION_CLICK",
