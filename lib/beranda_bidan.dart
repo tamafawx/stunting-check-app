@@ -6,6 +6,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 import 'package:flutter_stunting_posyandu/bidan/konsultasi_bidan.dart';
 import 'edukasi.dart';
@@ -532,6 +533,263 @@ class QuickMenuAccessBidan extends StatelessWidget {
   }
 }
 
+class StuntingPieChartSection extends StatelessWidget {
+  const StuntingPieChartSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            spreadRadius: 1,
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Pie Chart Gizi Anak",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 24),
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('balita')
+                .where('isHidden', isEqualTo: false)
+                .snapshots(),
+            builder: (context, balitaSnapshot) {
+              if (balitaSnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(color: Colors.blue),
+                );
+              }
+
+              if (!balitaSnapshot.hasData ||
+                  balitaSnapshot.data!.docs.isEmpty) {
+                return const Center(
+                  child: Text(
+                    "Belum ada data balita.",
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                );
+              }
+
+              return StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('pemeriksaan')
+                    .snapshots(),
+                builder: (context, pemeriksaanSnapshot) {
+                  if (pemeriksaanSnapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(color: Colors.blue),
+                    );
+                  }
+
+                  var balitaDocs = balitaSnapshot.data!.docs;
+                  var pemeriksaanDocs = pemeriksaanSnapshot.data?.docs ?? [];
+
+                  Map<String, String> latestStatusMap = {};
+                  Map<String, DateTime> latestDateMap = {};
+
+                  for (var doc in pemeriksaanDocs) {
+                    var data = doc.data() as Map<String, dynamic>;
+                    String bId = data['balitaId'] ?? '';
+                    Timestamp? ts = data['tanggal'];
+
+                    if (bId.isNotEmpty && ts != null) {
+                      DateTime date = ts.toDate();
+                      if (!latestDateMap.containsKey(bId) ||
+                          date.isAfter(latestDateMap[bId]!)) {
+                        latestDateMap[bId] = date;
+                        latestStatusMap[bId] =
+                            data['statusStunting'] ?? 'Belum Diukur';
+                      }
+                    }
+                  }
+
+                  int countAman = 0;
+                  int countRendah = 0;
+                  int countTinggi = 0;
+                  int countBelumDiukur = 0;
+
+                  for (var bDoc in balitaDocs) {
+                    String statusRaw =
+                        (latestStatusMap[bDoc.id] ?? 'Belum Diukur')
+                            .toLowerCase();
+                    if (statusRaw.contains('tinggi') ||
+                        statusRaw.contains('sangat pendek')) {
+                      countTinggi++;
+                    } else if (statusRaw.contains('sedang') ||
+                        statusRaw.contains('pendek')) {
+                      countRendah++;
+                    } else if (statusRaw.contains('belum diukur')) {
+                      countBelumDiukur++;
+                    } else {
+                      countAman++;
+                    }
+                  }
+
+                  int total = balitaDocs.length;
+                  double pctAman = (countAman / total) * 100;
+                  double pctRendah = (countRendah / total) * 100;
+                  double pctTinggi = (countTinggi / total) * 100;
+                  double pctBelum = (countBelumDiukur / total) * 100;
+
+                  return Row(
+                    children: [
+                      SizedBox(
+                        height: 140,
+                        width: 140,
+                        child: PieChart(
+                          PieChartData(
+                            sectionsSpace: 2,
+                            centerSpaceRadius: 30,
+                            sections: [
+                              if (countAman > 0)
+                                PieChartSectionData(
+                                  color: Colors.green,
+                                  value: countAman.toDouble(),
+                                  title: '${pctAman.toStringAsFixed(0)}%',
+                                  radius: 40,
+                                  titleStyle: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              if (countRendah > 0)
+                                PieChartSectionData(
+                                  color: Colors.orange,
+                                  value: countRendah.toDouble(),
+                                  title: '${pctRendah.toStringAsFixed(0)}%',
+                                  radius: 40,
+                                  titleStyle: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              if (countTinggi > 0)
+                                PieChartSectionData(
+                                  color: Colors.redAccent,
+                                  value: countTinggi.toDouble(),
+                                  title: '${pctTinggi.toStringAsFixed(0)}%',
+                                  radius: 40,
+                                  titleStyle: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              if (countBelumDiukur > 0)
+                                PieChartSectionData(
+                                  color: Colors.grey,
+                                  value: countBelumDiukur.toDouble(),
+                                  title: '${pctBelum.toStringAsFixed(0)}%',
+                                  radius: 40,
+                                  titleStyle: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildLegend(
+                              Colors.green,
+                              "Aman",
+                              countAman,
+                              pctAman,
+                            ),
+                            _buildLegend(
+                              Colors.orange,
+                              "Rendah",
+                              countRendah,
+                              pctRendah,
+                            ),
+                            _buildLegend(
+                              Colors.redAccent,
+                              "Tinggi",
+                              countTinggi,
+                              pctTinggi,
+                            ),
+                            _buildLegend(
+                              Colors.grey,
+                              "Belum Diukur",
+                              countBelumDiukur,
+                              pctBelum,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegend(Color color, String text, int count, double pct) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        children: [
+          Container(
+            width: 14,
+            height: 14,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.black87,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Text(
+            "$count (${pct.toStringAsFixed(1)}%)",
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.black54,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class LiveToddlersSectionBidan extends StatelessWidget {
   const LiveToddlersSectionBidan({super.key});
 
@@ -794,6 +1052,11 @@ class BerandaBidan extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: QuickMenuAccessBidan(userId: userId, fullName: fullName),
+            ),
+            const SizedBox(height: 20),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: StuntingPieChartSection(),
             ),
             const SizedBox(height: 20),
             const Padding(
