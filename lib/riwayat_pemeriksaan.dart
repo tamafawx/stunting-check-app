@@ -345,7 +345,7 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
                     Timestamp timestamp = data['tanggal'] ?? Timestamp.now();
                     DateTime waktu = timestamp.toDate();
                     String infoWaktu = _selectedDate == null
-                        ? "${waktu.day} ${_namaBulan[waktu.month]}   ${waktu.hour.toString().padLeft(2, '0')}:${waktu.minute.toString().padLeft(2, '0')}"
+                        ? "${waktu.day} ${_namaBulan[waktu.month]} ${waktu.year} - ${waktu.hour.toString().padLeft(2, '0')}:${waktu.minute.toString().padLeft(2, '0')}"
                         : "${waktu.hour.toString().padLeft(2, '0')}:${waktu.minute.toString().padLeft(2, '0')}";
                     return Container(
                       margin: const EdgeInsets.only(bottom: 16),
