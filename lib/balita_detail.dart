@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
-
 import 'balita_edit.dart';
+import 'laporan_balita.dart';
 import 'edukasi_detail.dart';
 import 'edukasi.dart';
 
@@ -10,12 +10,14 @@ class DetailBalita extends StatefulWidget {
   final String docId;
   final Map<String, dynamic> data;
   final String role;
+  final String fullName;
 
   const DetailBalita({
     super.key,
     required this.docId,
     required this.data,
     required this.role,
+    this.fullName = '',
   });
 
   @override
@@ -77,7 +79,6 @@ class _DetailBalitaState extends State<DetailBalita>
   String _calculateAge(dynamic birthDateData) {
     if (birthDateData == null) return "-";
     DateTime birthDate;
-
     if (birthDateData is Timestamp) {
       birthDate = birthDateData.toDate();
     } else if (birthDateData is String) {
@@ -107,6 +108,393 @@ class _DetailBalitaState extends State<DetailBalita>
       return "$months bln";
     }
     return "$years th $months bln";
+  }
+
+  void _showAddCatatanDialog(String pemeriksaanId) {
+    final TextEditingController _catatanController = TextEditingController();
+    bool _isSubmitting = false;
+
+    String namaPetugasAsli = widget.fullName.isNotEmpty
+        ? widget.fullName
+        : (widget.role == 'bidan' ? 'Bidan Desa' : 'Kader Posyandu');
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Row(
+                children: [
+                  Icon(Icons.edit_note_rounded, color: themeColor),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Tambah Catatan',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: _catatanController,
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        labelText: 'Catatan / Rekomendasi',
+                        hintText: 'Tuliskan saran untuk orang tua...',
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: themeColor, width: 2),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    'Batal',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: themeColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: _isSubmitting
+                      ? null
+                      : () async {
+                          if (_catatanController.text.trim().isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Catatan harus diisi'),
+                                backgroundColor: Colors.amber,
+                              ),
+                            );
+                            return;
+                          }
+
+                          setStateDialog(() => _isSubmitting = true);
+
+                          try {
+                            // Cek dan tarik foto profil kader/bidan dari database users
+                            String fotoPetugasUrl = '';
+                            if (widget.fullName.isNotEmpty) {
+                              var userQuery = await FirebaseFirestore.instance
+                                  .collection('users')
+                                  .where('fullName', isEqualTo: widget.fullName)
+                                  .where('role', isEqualTo: widget.role)
+                                  .limit(1)
+                                  .get();
+
+                              if (userQuery.docs.isNotEmpty) {
+                                fotoPetugasUrl =
+                                    userQuery.docs.first.data()['profileUrl'] ??
+                                    '';
+                              }
+                            }
+
+                            // Simpan catatan beserta url fotonya
+                            await FirebaseFirestore.instance
+                                .collection('pemeriksaan')
+                                .doc(pemeriksaanId)
+                                .update({
+                                  'namaPetugas': namaPetugasAsli,
+                                  'rolePetugas': widget.role,
+                                  'fotoPetugas': fotoPetugasUrl,
+                                  'catatan': _catatanController.text.trim(),
+                                  'waktuCatatan': FieldValue.serverTimestamp(),
+                                });
+
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Catatan berhasil ditambahkan'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Gagal menambahkan catatan'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            setStateDialog(() => _isSubmitting = false);
+                          }
+                        },
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'Simpan',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _hapusCatatan(String pemeriksaanId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'Hapus Catatan',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: const Text('Yakin ingin menghapus catatan ini?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              Navigator.pop(context);
+              await FirebaseFirestore.instance
+                  .collection('pemeriksaan')
+                  .doc(pemeriksaanId)
+                  .update({
+                    'namaPetugas': FieldValue.delete(),
+                    'rolePetugas': FieldValue.delete(),
+                    'fotoPetugas': FieldValue.delete(),
+                    'catatan': FieldValue.delete(),
+                    'waktuCatatan': FieldValue.delete(),
+                  });
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Catatan berhasil dihapus'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            child: const Text('Hapus', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCatatanSection(
+    Map<String, dynamic> latestPemeriksaan,
+    String pemeriksaanId,
+  ) {
+    String catatan = latestPemeriksaan['catatan'] ?? '';
+    String namaPetugas = latestPemeriksaan['namaPetugas'] ?? '';
+    String rolePetugas = latestPemeriksaan['rolePetugas'] ?? '';
+    String fotoPetugas = latestPemeriksaan['fotoPetugas'] ?? '';
+    Timestamp? ts = latestPemeriksaan['waktuCatatan'];
+
+    bool hasCatatan = catatan.trim().isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "Catatan & Rekomendasi Petugas",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            if (!hasCatatan &&
+                (widget.role == 'kader' || widget.role == 'bidan'))
+              InkWell(
+                onTap: () => _showAddCatatanDialog(pemeriksaanId),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: themeColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.add, size: 16, color: themeColor),
+                      const SizedBox(width: 4),
+                      Text(
+                        "Tambah",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: themeColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        if (!hasCatatan)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.speaker_notes_off_outlined, color: Colors.grey),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    "Belum ada catatan atau rekomendasi dari petugas untuk hasil pengukuran ini.",
+                    style: TextStyle(color: Colors.grey, fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else ...[
+          Builder(
+            builder: (context) {
+              String tglFormat = '-';
+              if (ts != null) {
+                DateTime dt = ts.toDate();
+                tglFormat =
+                    "${dt.day.toString().padLeft(2, '0')} ${_getMonthName(dt.month)} ${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+              }
+
+              Color roleColor = rolePetugas == 'bidan'
+                  ? Colors.purple
+                  : Colors.blue;
+              IconData roleIcon = rolePetugas == 'bidan'
+                  ? Icons.medical_services_rounded
+                  : Icons.health_and_safety_rounded;
+
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: roleColor.withValues(alpha: 0.3)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: roleColor.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundColor: roleColor.withValues(alpha: 0.15),
+                          backgroundImage: fotoPetugas.isNotEmpty
+                              ? NetworkImage(fotoPetugas)
+                              : null,
+                          child: fotoPetugas.isEmpty
+                              ? Icon(roleIcon, size: 18, color: roleColor)
+                              : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                namaPetugas,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                "${rolePetugas.toUpperCase()}   $tglFormat",
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (widget.role == 'kader' || widget.role == 'bidan')
+                          IconButton(
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.redAccent,
+                              size: 20,
+                            ),
+                            onPressed: () => _hapusCatatan(pemeriksaanId),
+                            constraints: const BoxConstraints(),
+                            padding: EdgeInsets.zero,
+                          ),
+                      ],
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      child: Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: Color(0xFFF0F0F0),
+                      ),
+                    ),
+                    Text(
+                      catatan,
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 13,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ],
+    );
   }
 
   Widget _buildRekomendasiEdukasi(String currentStatus) {
@@ -165,6 +553,7 @@ class _DetailBalitaState extends State<DetailBalita>
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
+
             if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
               return Container(
                 padding: const EdgeInsets.all(16),
@@ -187,7 +576,6 @@ class _DetailBalitaState extends State<DetailBalita>
             }
 
             var docs = snapshot.data!.docs;
-
             docs.sort((a, b) {
               var dataA = a.data() as Map<String, dynamic>;
               var dataB = b.data() as Map<String, dynamic>;
@@ -197,7 +585,6 @@ class _DetailBalitaState extends State<DetailBalita>
                   dataB['createdAt'] ?? Timestamp.fromMillisecondsSinceEpoch(0);
               return tB.compareTo(tA);
             });
-
             var topDocs = docs.take(3).toList();
 
             return Column(
@@ -345,6 +732,56 @@ class _DetailBalitaState extends State<DetailBalita>
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
         actions: [
+          IconButton(
+            tooltip: "Unduh Laporan",
+            icon: const Icon(Icons.download_outlined, color: Colors.black87),
+            onPressed: () async {
+              try {
+                // Menampilkan snackbar loading agar tombol terasa merespon
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: const [
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        ),
+                        SizedBox(width: 16),
+                        Text('Menyiapkan laporan PDF...'),
+                      ],
+                    ),
+                    backgroundColor: themeColor,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+
+                // Tambahkan 'context: context' di bawah ini jika file balita_laporan.dart membutuhkannya
+                await generateLaporanBalita(
+                  balitaId: widget.docId,
+                  idBalita: idBalita,
+                  nama: nama,
+                  jenisKelamin: jenisKelamin,
+                  usia: usiaText,
+                  tanggalLahirData:
+                      _balitaData['tanggalLahir'] ??
+                      widget.data['tanggalLahir'],
+                  fotoUrl: fotoUrl,
+                );
+              } catch (e) {
+                // Menangkap error jika PDF gagal di-generate
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Gagal mengunduh laporan: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+          ),
           if (widget.role == 'kader')
             IconButton(
               icon: const Icon(Icons.edit_outlined, color: Colors.black87),
@@ -499,6 +936,7 @@ class _DetailBalitaState extends State<DetailBalita>
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
+
         if (snapshot.hasError) {
           return Center(
             child: Text(
@@ -508,6 +946,7 @@ class _DetailBalitaState extends State<DetailBalita>
             ),
           );
         }
+
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Center(
             child: Column(
@@ -541,7 +980,11 @@ class _DetailBalitaState extends State<DetailBalita>
           Timestamp tB = dataB['tanggal'] ?? Timestamp.now();
           return tB.compareTo(tA);
         });
+
+        // Ambil data dan ID Pemeriksaan dari yang terbaru
         var latestDoc = docs.first.data() as Map<String, dynamic>;
+        String latestDocId = docs.first.id;
+
         String berat = latestDoc['beratBadan'] != null
             ? "${latestDoc['beratBadan']} kg"
             : "-";
@@ -554,6 +997,7 @@ class _DetailBalitaState extends State<DetailBalita>
         String lengan = latestDoc['lingkarLengan'] != null
             ? "${latestDoc['lingkarLengan']} cm"
             : "-";
+
         String tglPemeriksaan = "-";
         if (latestDoc['tanggal'] != null) {
           Timestamp t = latestDoc['tanggal'];
@@ -730,6 +1174,11 @@ class _DetailBalitaState extends State<DetailBalita>
                 ),
               ),
               const SizedBox(height: 24),
+
+              // Bagian ini sekarang merujuk dari dokumen pemeriksaan terbaru
+              _buildCatatanSection(latestDoc, latestDocId),
+
+              const SizedBox(height: 24),
               _buildRekomendasiEdukasi(statusStunting),
               const SizedBox(height: 24),
             ],
@@ -749,6 +1198,7 @@ class _DetailBalitaState extends State<DetailBalita>
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
+
         if (snapshot.hasError) {
           return Center(
             child: Text(
@@ -758,6 +1208,7 @@ class _DetailBalitaState extends State<DetailBalita>
             ),
           );
         }
+
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Center(
             child: Column(
@@ -792,9 +1243,11 @@ class _DetailBalitaState extends State<DetailBalita>
           itemCount: docs.length,
           itemBuilder: (context, index) {
             var doc = docs[index].data() as Map<String, dynamic>;
+
             DateTime dt = (doc['tanggal'] as Timestamp).toDate();
             String formattedDate =
                 "${dt.day.toString().padLeft(2, '0')} ${_getMonthName(dt.month)} ${dt.year}";
+
             String statusRiwayat = doc['statusStunting'] ?? "Memproses...";
             Color bgStatusColor = Colors.grey.shade100;
             Color textStatusColor = Colors.grey.shade600;
@@ -928,6 +1381,7 @@ class _DetailBalitaState extends State<DetailBalita>
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
+
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return const Center(
             child: Text(
@@ -951,6 +1405,7 @@ class _DetailBalitaState extends State<DetailBalita>
           var data = docs[i].data() as Map<String, dynamic>;
           double berat = double.tryParse(data['beratBadan'].toString()) ?? 0;
           double tinggi = double.tryParse(data['tinggiBadan'].toString()) ?? 0;
+
           beratSpots.add(FlSpot(i.toDouble(), berat));
           tinggiSpots.add(FlSpot(i.toDouble(), tinggi));
         }

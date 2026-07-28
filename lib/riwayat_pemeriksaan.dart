@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'laporan_riwayat_pemeriksaan.dart'; // Memanggil file generator PDF
 
 class RiwayatPemeriksaan extends StatefulWidget {
   // Tambahkan property role untuk menyesuaikan tema
@@ -90,6 +91,7 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'normal':
+      case 'aman':
         return Colors.green;
       case 'risiko tinggi':
       case 'sangat pendek':
@@ -101,6 +103,98 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
         return _themeColor; // Fallback ke warna tema
     }
   }
+
+  // ==== FUNGSI BARU: UNDUH LAPORAN HARIAN ====
+  Future<void> _unduhLaporanHarian(DateTime targetDate) async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Row(
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
+            ),
+            SizedBox(width: 16),
+            Text('Menyiapkan rekap laporan...'),
+          ],
+        ),
+        backgroundColor: _themeColor, // Warna menyesuaikan tema kader/bidan
+        duration: const Duration(seconds: 3),
+      ),
+    );
+
+    try {
+      // 1. Ambil batasan awal dan akhir hari yang sedang dipilih
+      DateTime startOfDay = DateTime(
+        targetDate.year,
+        targetDate.month,
+        targetDate.day,
+      );
+      DateTime endOfDay = startOfDay.add(const Duration(days: 1));
+
+      // 2. Cari semua data pemeriksaan di tanggal tersebut
+      var snapPemeriksaan = await FirebaseFirestore.instance
+          .collection('pemeriksaan')
+          .where(
+            'tanggal',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+          )
+          .where('tanggal', isLessThan: Timestamp.fromDate(endOfDay))
+          .get();
+
+      List<Map<String, dynamic>> finalData = [];
+
+      // 3. Gabungkan data pengukuran dengan Nama Balita
+      for (var doc in snapPemeriksaan.docs) {
+        var data = doc.data();
+        String bId = data['balitaId'] ?? '';
+        String namaBalita = '-';
+
+        if (bId.isNotEmpty) {
+          var balitaDoc = await FirebaseFirestore.instance
+              .collection('balita')
+              .doc(bId)
+              .get();
+          if (balitaDoc.exists) {
+            namaBalita = balitaDoc.data()?['nama'] ?? 'Tanpa Nama';
+          }
+        }
+
+        data['namaBalita'] = namaBalita;
+        finalData.add(data);
+      }
+
+      if (finalData.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tidak ada data pemeriksaan di tanggal ini.'),
+            backgroundColor: Colors.amber,
+          ),
+        );
+        return;
+      }
+
+      // 4. Kirim data ke file pemeriksaan_laporan.dart untuk dibuatkan PDF!
+      await generateLaporanPemeriksaanHarian(
+        tanggalTerpilih: targetDate,
+        dataPemeriksaan: finalData,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal mengunduh laporan: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+  // ===========================================
 
   @override
   Widget build(BuildContext context) {
@@ -118,6 +212,30 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
         centerTitle: true,
         backgroundColor: _themeColor, // Gunakan warna tema
         elevation: 0,
+        actions: [
+          // TOMBOL UNDUH PDF DITAMBAHKAN DI SINI
+          IconButton(
+            icon: const Icon(Icons.download_outlined, color: Colors.white),
+            tooltip: 'Unduh Rekap Harian',
+            onPressed: () {
+              // Jika user belum memilih tanggal spesifik (Semua Waktu)
+              if (_selectedDate == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Silakan pilih tanggal (hari) terlebih dahulu untuk mengunduh rekap harian.',
+                    ),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+              } else {
+                // Jalankan fungsi unduh dengan tanggal yang sedang dipilih
+                _unduhLaporanHarian(_selectedDate!);
+              }
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Column(
         children: [
@@ -309,6 +427,7 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
                       .toLowerCase();
                   return nama.contains(_searchQuery.toLowerCase());
                 }).toList();
+
                 if (filteredDocs.isEmpty) {
                   return Center(
                     child: Column(
@@ -345,7 +464,7 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
                     Timestamp timestamp = data['tanggal'] ?? Timestamp.now();
                     DateTime waktu = timestamp.toDate();
                     String infoWaktu = _selectedDate == null
-                        ? "${waktu.day} ${_namaBulan[waktu.month]} ${waktu.year} - ${waktu.hour.toString().padLeft(2, '0')}:${waktu.minute.toString().padLeft(2, '0')}"
+                        ? "${waktu.day} ${_namaBulan[waktu.month]}   ${waktu.hour.toString().padLeft(2, '0')}:${waktu.minute.toString().padLeft(2, '0')}"
                         : "${waktu.hour.toString().padLeft(2, '0')}:${waktu.minute.toString().padLeft(2, '0')}";
                     return Container(
                       margin: const EdgeInsets.only(bottom: 16),

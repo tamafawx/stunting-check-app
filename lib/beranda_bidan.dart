@@ -7,7 +7,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
-
 import 'package:flutter_stunting_posyandu/bidan/konsultasi_bidan.dart';
 import 'edukasi.dart';
 import 'balita_kelola.dart';
@@ -64,6 +63,7 @@ class UserHeaderSection extends StatelessWidget {
                   }
                 }
               }
+
               if (unreadCount == 0) return const SizedBox();
 
               return Positioned(
@@ -256,7 +256,6 @@ class SummarySection extends StatelessWidget {
                 var data = doc.data() as Map<String, dynamic>;
                 String bId = data['balitaId'] ?? '';
                 String status = data['statusStunting'] ?? 'Normal';
-
                 if (bId.isNotEmpty) {
                   latestStatusMap[bId] = status;
                 }
@@ -445,7 +444,8 @@ class QuickMenuAccessBidan extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const KelolaBalita(role: 'bidan'),
+                      builder: (context) =>
+                          KelolaBalita(role: 'bidan', fullName: fullName),
                     ),
                   );
                 },
@@ -791,7 +791,8 @@ class StuntingPieChartSection extends StatelessWidget {
 }
 
 class LiveToddlersSectionBidan extends StatelessWidget {
-  const LiveToddlersSectionBidan({super.key});
+  final String fullName;
+  const LiveToddlersSectionBidan({super.key, required this.fullName});
 
   String _calculateAge(dynamic birthDateData) {
     if (birthDateData == null) return "-";
@@ -812,6 +813,7 @@ class LiveToddlersSectionBidan extends StatelessWidget {
       years--;
       months += 12;
     }
+
     if (now.day < birthDate.day) {
       months--;
       if (months < 0) {
@@ -862,7 +864,8 @@ class LiveToddlersSectionBidan extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const KelolaBalita(role: 'bidan'),
+                      builder: (context) =>
+                          KelolaBalita(role: 'bidan', fullName: fullName),
                     ),
                   );
                 },
@@ -893,6 +896,7 @@ class LiveToddlersSectionBidan extends StatelessWidget {
                   ),
                 );
               }
+
               if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                 return Center(
                   child: Padding(
@@ -914,8 +918,8 @@ class LiveToddlersSectionBidan extends StatelessWidget {
                   ),
                 );
               }
-              var listBalita = snapshot.data!.docs;
 
+              var listBalita = snapshot.data!.docs;
               return ListView.builder(
                 padding: EdgeInsets.zero,
                 shrinkWrap: true,
@@ -924,6 +928,7 @@ class LiveToddlersSectionBidan extends StatelessWidget {
                 itemBuilder: (context, index) {
                   var doc = listBalita[index];
                   var data = doc.data() as Map<String, dynamic>;
+
                   String nama = data['nama'] ?? 'Tanpa Nama';
                   String jenisKelamin = data['jenisKelamin'] ?? 'Laki-laki';
                   String usia = _calculateAge(data['tanggalLahir']);
@@ -950,6 +955,7 @@ class LiveToddlersSectionBidan extends StatelessWidget {
                               docId: doc.id,
                               data: data,
                               role: 'bidan',
+                              fullName: fullName,
                             ),
                           ),
                         );
@@ -1059,9 +1065,9 @@ class BerandaBidan extends StatelessWidget {
               child: StuntingPieChartSection(),
             ),
             const SizedBox(height: 20),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: LiveToddlersSectionBidan(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: LiveToddlersSectionBidan(fullName: fullName),
             ),
             const SizedBox(height: 40),
           ],

@@ -7,7 +7,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
-
 import 'edukasi.dart';
 import 'balita_kelola.dart';
 import 'balita_detail.dart';
@@ -65,6 +64,7 @@ class UserHeaderSection extends StatelessWidget {
                   }
                 }
               }
+
               if (unreadCount == 0) return const SizedBox();
 
               return Positioned(
@@ -247,7 +247,6 @@ class SummarySection extends StatelessWidget {
         int totalBalita = balitaSnapshot.hasData
             ? balitaSnapshot.data!.docs.length
             : 0;
-
         List<String> activeBalitaIds = balitaSnapshot.hasData
             ? balitaSnapshot.data!.docs.map((doc) => doc.id).toList()
             : [];
@@ -262,6 +261,7 @@ class SummarySection extends StatelessWidget {
               .snapshots(),
           builder: (context, pemeriksaanSnapshot) {
             int belumDiukurCount = totalBalita;
+
             if (pemeriksaanSnapshot.hasData && balitaSnapshot.hasData) {
               Set<String> measuredBalitaIds = pemeriksaanSnapshot.data!.docs
                   .map(
@@ -451,7 +451,8 @@ class QuickMenuAccess extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const KelolaBalita(role: 'kader'),
+                      builder: (context) =>
+                          KelolaBalita(role: 'kader', fullName: fullName),
                     ),
                   );
                 },
@@ -812,7 +813,8 @@ class StuntingPieChartSection extends StatelessWidget {
 }
 
 class LiveToddlersSection extends StatelessWidget {
-  const LiveToddlersSection({super.key});
+  final String fullName;
+  const LiveToddlersSection({super.key, required this.fullName});
 
   String _calculateAge(dynamic birthDateData) {
     if (birthDateData == null) return "-";
@@ -833,6 +835,7 @@ class LiveToddlersSection extends StatelessWidget {
       years--;
       months += 12;
     }
+
     if (now.day < birthDate.day) {
       months--;
       if (months < 0) {
@@ -883,7 +886,8 @@ class LiveToddlersSection extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const KelolaBalita(role: 'kader'),
+                      builder: (context) =>
+                          KelolaBalita(role: 'kader', fullName: fullName),
                     ),
                   );
                 },
@@ -914,6 +918,7 @@ class LiveToddlersSection extends StatelessWidget {
                   ),
                 );
               }
+
               if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                 return Center(
                   child: Padding(
@@ -935,8 +940,8 @@ class LiveToddlersSection extends StatelessWidget {
                   ),
                 );
               }
-              var listBalita = snapshot.data!.docs;
 
+              var listBalita = snapshot.data!.docs;
               return ListView.builder(
                 padding: EdgeInsets.zero,
                 shrinkWrap: true,
@@ -945,6 +950,7 @@ class LiveToddlersSection extends StatelessWidget {
                 itemBuilder: (context, index) {
                   var doc = listBalita[index];
                   var data = doc.data() as Map<String, dynamic>;
+
                   String nama = data['nama'] ?? 'Tanpa Nama';
                   String jenisKelamin = data['jenisKelamin'] ?? 'Laki-laki';
                   String usia = _calculateAge(data['tanggalLahir']);
@@ -971,6 +977,7 @@ class LiveToddlersSection extends StatelessWidget {
                               docId: doc.id,
                               data: data,
                               role: 'kader',
+                              fullName: fullName,
                             ),
                           ),
                         );
@@ -1080,9 +1087,9 @@ class BerandaKader extends StatelessWidget {
               child: StuntingPieChartSection(),
             ),
             const SizedBox(height: 20),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: LiveToddlersSection(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: LiveToddlersSection(fullName: fullName),
             ),
             const SizedBox(height: 40),
           ],
