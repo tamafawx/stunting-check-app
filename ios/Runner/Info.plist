@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Aplikasi ini membutuhkan akses kalender untuk menambahkan jadwal posyandu/imunisasi.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Aplikasi ini membutuhkan akses kontak (sebagai syarat kalender pada iOS).</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

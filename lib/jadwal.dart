@@ -7,9 +7,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-// import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:add_2_calendar/add_2_calendar.dart';
 
 class Jadwal extends StatefulWidget {
   const Jadwal({super.key});
@@ -19,23 +19,66 @@ class Jadwal extends StatefulWidget {
 }
 
 class _JadwalState extends State<Jadwal> {
-  // Future<void> _bukaDiMaps(double lat, double lng) async {
-  //   final Uri url = Uri.parse(
-  //     'https://www.google.com/maps/search/?api=1&query=$lat,$lng',
-  //   );
-  //   if (await canLaunchUrl(url)) {
-  //     await launchUrl(url, mode: LaunchMode.externalApplication);
-  //   } else {
-  //     if (mounted) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(
-  //           content: Text('Tidak dapat membuka peta saat ini.'),
-  //           backgroundColor: Colors.red,
-  //         ),
-  //       );
-  //     }
-  //   }
-  // }
+  void _tambahKeKalender(
+    String judul,
+    String keterangan,
+    String lokasi,
+    DateTime tanggal,
+    String waktuMulai,
+    String waktuSelesai,
+  ) {
+    try {
+      final List<String> startParts = waktuMulai.split(':');
+      final List<String> endParts = waktuSelesai.split(':');
+
+      DateTime startDate = DateTime(
+        tanggal.year,
+        tanggal.month,
+        tanggal.day,
+        int.tryParse(startParts.isNotEmpty ? startParts[0] : '0') ?? 0,
+        int.tryParse(startParts.length > 1 ? startParts[1] : '0') ?? 0,
+      );
+
+      DateTime endDate = DateTime(
+        tanggal.year,
+        tanggal.month,
+        tanggal.day,
+        int.tryParse(endParts.isNotEmpty ? endParts[0] : '0') ?? 0,
+        int.tryParse(endParts.length > 1 ? endParts[1] : '0') ?? 0,
+      );
+
+      final Event event = Event(
+        title: judul,
+        description: keterangan.isNotEmpty
+            ? keterangan
+            : 'Kegiatan Posyandu / Imunisasi dari aplikasi',
+        location: lokasi,
+        startDate: startDate,
+        endDate: endDate,
+        allDay: false,
+      );
+
+      Add2Calendar.addEvent2Cal(event).then((success) {
+        if (!success && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Gagal menambahkan jadwal ke kalender.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Terjadi kesalahan saat memproses kalender.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -146,6 +189,7 @@ class _JadwalState extends State<Jadwal> {
 
               bool isPosyandu = kategori.toLowerCase() == 'posyandu';
               Color themeColor = isPosyandu ? Colors.green : Colors.orange;
+              Color lightThemeColor = isPosyandu ? Colors.green.shade50 : Colors.orange.shade50;
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 24),
@@ -154,22 +198,23 @@ class _JadwalState extends State<Jadwal> {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 15,
+                      offset: const Offset(0, 6),
                     ),
                   ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // HEADER KARTU
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
                         vertical: 16,
                       ),
                       decoration: BoxDecoration(
-                        color: themeColor.withValues(alpha: 0.1),
+                        color: lightThemeColor,
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(24),
                           topRight: Radius.circular(24),
@@ -247,14 +292,16 @@ class _JadwalState extends State<Jadwal> {
                           _buildInfoRow(
                             Icons.calendar_month_rounded,
                             formatTanggal,
+                            themeColor,
                           ),
                           const SizedBox(height: 12),
                           _buildInfoRow(
                             Icons.access_time_rounded,
                             "$waktuMulai - $waktuSelesai WIB",
+                            themeColor,
                           ),
                           const SizedBox(height: 12),
-                          _buildInfoRow(Icons.location_on_rounded, lokasi),
+                          _buildInfoRow(Icons.location_on_rounded, lokasi, themeColor),
 
                           if (keterangan.isNotEmpty) ...[
                             const SizedBox(height: 16),
@@ -289,10 +336,45 @@ class _JadwalState extends State<Jadwal> {
                               ),
                             ),
                           ],
+
+                          const SizedBox(height: 20),
+
+                          // Tombol Tambah ke Kalender
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () => _tambahKeKalender(
+                                judul,
+                                keterangan,
+                                lokasi,
+                                tanggal,
+                                waktuMulai,
+                                waktuSelesai,
+                              ),
+                              icon: const Icon(Icons.edit_calendar_rounded, size: 20),
+                              label: const Text(
+                                "Tambahkan ke Kalender",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: themeColor,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 0,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
 
+                    // MAP
                     if (lat != null && lng != null)
                       Container(
                         height: 160,
@@ -341,34 +423,6 @@ class _JadwalState extends State<Jadwal> {
                                   ),
                                 ],
                               ),
-                              // Positioned(
-                              //   bottom: 12,
-                              //   right: 12,
-                              //   child: ElevatedButton.icon(
-                              //     onPressed: () => _bukaDiMaps(lat, lng),
-                              //     icon: const Icon(
-                              //       Icons.directions_rounded,
-                              //       size: 18,
-                              //     ),
-                              //     label: const Text(
-                              //       "Buka Rute",
-                              //       style: TextStyle(
-                              //         fontWeight: FontWeight.bold,
-                              //       ),
-                              //     ),
-                              //     style: ElevatedButton.styleFrom(
-                              //       backgroundColor: themeColor,
-                              //       foregroundColor: Colors.white,
-                              //       shape: RoundedRectangleBorder(
-                              //         borderRadius: BorderRadius.circular(12),
-                              //       ),
-                              //       elevation: 4,
-                              //       shadowColor: themeColor.withValues(
-                              //         alpha: 0.5,
-                              //       ),
-                              //     ),
-                              //   ),
-                              // ),
                             ],
                           ),
                         ),
@@ -383,11 +437,11 @@ class _JadwalState extends State<Jadwal> {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String text) {
+  Widget _buildInfoRow(IconData icon, String text, Color themeColor) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: Colors.grey[500]),
+        Icon(icon, size: 20, color: themeColor),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
