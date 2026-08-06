@@ -111,8 +111,8 @@ class _DetailBalitaState extends State<DetailBalita>
   }
 
   void _showAddCatatanDialog(String pemeriksaanId) {
-    final TextEditingController _catatanController = TextEditingController();
-    bool _isSubmitting = false;
+    final TextEditingController catatanController = TextEditingController();
+    bool isSubmitting = false;
 
     String namaPetugasAsli = widget.fullName.isNotEmpty
         ? widget.fullName
@@ -142,7 +142,7 @@ class _DetailBalitaState extends State<DetailBalita>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextField(
-                      controller: _catatanController,
+                      controller: catatanController,
                       maxLines: 4,
                       decoration: InputDecoration(
                         labelText: 'Catatan / Rekomendasi',
@@ -177,10 +177,10 @@ class _DetailBalitaState extends State<DetailBalita>
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: _isSubmitting
+                  onPressed: isSubmitting
                       ? null
                       : () async {
-                          if (_catatanController.text.trim().isEmpty) {
+                          if (catatanController.text.trim().isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Catatan harus diisi'),
@@ -190,10 +190,9 @@ class _DetailBalitaState extends State<DetailBalita>
                             return;
                           }
 
-                          setStateDialog(() => _isSubmitting = true);
+                          setStateDialog(() => isSubmitting = true);
 
                           try {
-                            // Cek dan tarik foto profil kader/bidan dari database users
                             String fotoPetugasUrl = '';
                             if (widget.fullName.isNotEmpty) {
                               var userQuery = await FirebaseFirestore.instance
@@ -210,7 +209,6 @@ class _DetailBalitaState extends State<DetailBalita>
                               }
                             }
 
-                            // Simpan catatan beserta url fotonya
                             await FirebaseFirestore.instance
                                 .collection('pemeriksaan')
                                 .doc(pemeriksaanId)
@@ -218,7 +216,7 @@ class _DetailBalitaState extends State<DetailBalita>
                                   'namaPetugas': namaPetugasAsli,
                                   'rolePetugas': widget.role,
                                   'fotoPetugas': fotoPetugasUrl,
-                                  'catatan': _catatanController.text.trim(),
+                                  'catatan': catatanController.text.trim(),
                                   'waktuCatatan': FieldValue.serverTimestamp(),
                                 });
 
@@ -236,10 +234,10 @@ class _DetailBalitaState extends State<DetailBalita>
                                 backgroundColor: Colors.red,
                               ),
                             );
-                            setStateDialog(() => _isSubmitting = false);
+                            setStateDialog(() => isSubmitting = false);
                           }
                         },
-                  child: _isSubmitting
+                  child: isSubmitting
                       ? const SizedBox(
                           width: 20,
                           height: 20,
@@ -737,7 +735,6 @@ class _DetailBalitaState extends State<DetailBalita>
             icon: const Icon(Icons.download_outlined, color: Colors.black87),
             onPressed: () async {
               try {
-                // Menampilkan snackbar loading agar tombol terasa merespon
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Row(
@@ -759,7 +756,6 @@ class _DetailBalitaState extends State<DetailBalita>
                   ),
                 );
 
-                // Tambahkan 'context: context' di bawah ini jika file balita_laporan.dart membutuhkannya
                 await generateLaporanBalita(
                   balitaId: widget.docId,
                   idBalita: idBalita,
@@ -772,7 +768,6 @@ class _DetailBalitaState extends State<DetailBalita>
                   fotoUrl: fotoUrl,
                 );
               } catch (e) {
-                // Menangkap error jika PDF gagal di-generate
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Gagal mengunduh laporan: $e'),
@@ -981,7 +976,6 @@ class _DetailBalitaState extends State<DetailBalita>
           return tB.compareTo(tA);
         });
 
-        // Ambil data dan ID Pemeriksaan dari yang terbaru
         var latestDoc = docs.first.data() as Map<String, dynamic>;
         String latestDocId = docs.first.id;
 
@@ -1175,7 +1169,6 @@ class _DetailBalitaState extends State<DetailBalita>
               ),
               const SizedBox(height: 24),
 
-              // Bagian ini sekarang merujuk dari dokumen pemeriksaan terbaru
               _buildCatatanSection(latestDoc, latestDocId),
 
               const SizedBox(height: 24),

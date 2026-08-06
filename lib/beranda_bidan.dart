@@ -169,19 +169,19 @@ class UserHeaderSection extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Halo, selamat datang',
+                  'Selamat Datang,',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   fullName,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 22,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
                   ),
@@ -264,7 +264,8 @@ class SummarySection extends StatelessWidget {
               latestStatusMap.forEach((key, value) {
                 if (value.toLowerCase().contains('tinggi') ||
                     value.toLowerCase().contains('sedang') ||
-                    value.toLowerCase().contains('pendek')) {
+                    value.toLowerCase().contains('pendek') ||
+                    value.toLowerCase().contains('rendah')) {
                   risikoStunting++;
                 }
               });
@@ -495,7 +496,7 @@ class QuickMenuAccessBidan extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return SizedBox(
-      width: 72,
+      width: 64,
       child: Column(
         children: [
           Material(
@@ -514,12 +515,12 @@ class QuickMenuAccessBidan extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Text(
             label,
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: FontWeight.w600,
               color: Colors.black87,
               height: 1.25,
@@ -634,7 +635,8 @@ class StuntingPieChartSection extends StatelessWidget {
                         statusRaw.contains('sangat pendek')) {
                       countTinggi++;
                     } else if (statusRaw.contains('sedang') ||
-                        statusRaw.contains('pendek')) {
+                        statusRaw.contains('pendek') ||
+                        statusRaw.contains('rendah')) {
                       countRendah++;
                     } else if (statusRaw.contains('belum diukur')) {
                       countBelumDiukur++;

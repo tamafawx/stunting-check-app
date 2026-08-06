@@ -17,8 +17,22 @@ class _KelolaBalitaState extends State<KelolaBalita> {
   bool _isAscending = true;
   final TextEditingController _searchController = TextEditingController();
 
-  // Deteksi warna berdasarkan role
+  late Stream<QuerySnapshot> _balitaStream;
+  late Stream<QuerySnapshot> _pemeriksaanStream;
+
   Color get themeColor => widget.role == 'bidan' ? Colors.purple : Colors.blue;
+
+  @override
+  void initState() {
+    super.initState();
+    _balitaStream = FirebaseFirestore.instance
+        .collection('balita')
+        .where('isHidden', isEqualTo: false)
+        .snapshots();
+    _pemeriksaanStream = FirebaseFirestore.instance
+        .collection('pemeriksaan')
+        .snapshots();
+  }
 
   @override
   void dispose() {
@@ -190,10 +204,7 @@ class _KelolaBalitaState extends State<KelolaBalita> {
         elevation: 0,
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('balita')
-            .where('isHidden', isEqualTo: false)
-            .snapshots(),
+        stream: _balitaStream,
         builder: (context, balitaSnapshot) {
           if (balitaSnapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator(color: themeColor));
@@ -205,9 +216,7 @@ class _KelolaBalitaState extends State<KelolaBalita> {
           }
 
           return StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('pemeriksaan')
-                .snapshots(),
+            stream: _pemeriksaanStream,
             builder: (context, pemeriksaanSnapshot) {
               if (pemeriksaanSnapshot.connectionState ==
                   ConnectionState.waiting) {
@@ -247,7 +256,8 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                     statusRaw.contains('sangat pendek')) {
                   countTinggi++;
                 } else if (statusRaw.contains('sedang') ||
-                    statusRaw.contains('pendek')) {
+                    statusRaw.contains('pendek') ||
+                    statusRaw.contains('rendah')) {
                   countRendah++;
                 } else {
                   countAman++;
@@ -274,7 +284,7 @@ class _KelolaBalitaState extends State<KelolaBalita> {
               });
 
               return SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
+                physics: const ClampingScrollPhysics(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -528,6 +538,9 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                                     ) ||
                                     statusRaw.toLowerCase().contains(
                                       'pendek',
+                                    ) ||
+                                    statusRaw.toLowerCase().contains(
+                                      'rendah',
                                     )) {
                                   statusTampil = "Risiko Rendah";
                                   statusColor = Colors.orange;

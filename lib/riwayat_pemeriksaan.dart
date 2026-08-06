@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'laporan_riwayat_pemeriksaan.dart'; // Memanggil file generator PDF
+import 'package:table_calendar/table_calendar.dart';
+import 'laporan_riwayat_pemeriksaan.dart';
 
 class RiwayatPemeriksaan extends StatefulWidget {
-  // Tambahkan property role untuk menyesuaikan tema
   final String role;
 
-  // Berikan default value 'kader' jika tidak di-pass (untuk kompatibilitas)
   const RiwayatPemeriksaan({super.key, required this.role});
 
   @override
@@ -17,6 +16,23 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
   DateTime? _selectedDate;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+
+  int _documentLimit = 10;
+  final ScrollController _scrollController = ScrollController();
+  List<DocumentSnapshot>? _cachedDocs;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 200) {
+        setState(() {
+          _documentLimit += 10;
+        });
+      }
+    });
+  }
 
   final List<String> _namaBulan = [
     '',
@@ -41,49 +57,43 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
   void _resetFilter() {
     setState(() {
       _selectedDate = null;
+      _documentLimit = 10;
+      _cachedDocs = null;
     });
   }
 
-  // Helper untuk mendapatkan warna tema berdasarkan role
   Color get _themeColor {
     return widget.role == 'bidan' ? Colors.purple : Colors.blue;
   }
 
-  // Helper untuk mendapatkan warna background sekunder berdasarkan role
   Color get _themeLightColor {
     return widget.role == 'bidan'
         ? const Color(0xFFF3E5F5)
-        : const Color(0xFFE3F2FD); // purple[50] : blue[50]
+        : const Color(0xFFE3F2FD);
   }
 
   Future<void> _pilihTanggal(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    final DateTime? picked = await showDialog<DateTime>(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: _themeColor, // Gunakan warna tema
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
-            ),
-          ),
-          child: child!,
+      builder: (context) {
+        return PemeriksaanCalendarDialog(
+          initialDate: _selectedDate,
+          themeColor: _themeColor,
         );
       },
     );
     if (picked != null) {
       setState(() {
         _selectedDate = picked;
+        _documentLimit = 10;
+        _cachedDocs = null;
       });
     }
   }
@@ -100,11 +110,10 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
       case 'pendek':
         return Colors.orange;
       default:
-        return _themeColor; // Fallback ke warna tema
+        return _themeColor;
     }
   }
 
-  // ==== FUNGSI BARU: UNDUH LAPORAN HARIAN ====
   Future<void> _unduhLaporanHarian(DateTime targetDate) async {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -122,13 +131,12 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
             Text('Menyiapkan rekap laporan...'),
           ],
         ),
-        backgroundColor: _themeColor, // Warna menyesuaikan tema kader/bidan
+        backgroundColor: _themeColor,
         duration: const Duration(seconds: 3),
       ),
     );
 
     try {
-      // 1. Ambil batasan awal dan akhir hari yang sedang dipilih
       DateTime startOfDay = DateTime(
         targetDate.year,
         targetDate.month,
@@ -136,7 +144,6 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
       );
       DateTime endOfDay = startOfDay.add(const Duration(days: 1));
 
-      // 2. Cari semua data pemeriksaan di tanggal tersebut
       var snapPemeriksaan = await FirebaseFirestore.instance
           .collection('pemeriksaan')
           .where(
@@ -148,7 +155,6 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
 
       List<Map<String, dynamic>> finalData = [];
 
-      // 3. Gabungkan data pengukuran dengan Nama Balita
       for (var doc in snapPemeriksaan.docs) {
         var data = doc.data();
         String bId = data['balitaId'] ?? '';
@@ -179,7 +185,6 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
         return;
       }
 
-      // 4. Kirim data ke file pemeriksaan_laporan.dart untuk dibuatkan PDF!
       await generateLaporanPemeriksaanHarian(
         tanggalTerpilih: targetDate,
         dataPemeriksaan: finalData,
@@ -194,7 +199,6 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
       );
     }
   }
-  // ===========================================
 
   @override
   Widget build(BuildContext context) {
@@ -210,15 +214,13 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
           ),
         ),
         centerTitle: true,
-        backgroundColor: _themeColor, // Gunakan warna tema
+        backgroundColor: _themeColor,
         elevation: 0,
         actions: [
-          // TOMBOL UNDUH PDF DITAMBAHKAN DI SINI
           IconButton(
             icon: const Icon(Icons.download_outlined, color: Colors.white),
             tooltip: 'Unduh Rekap Harian',
             onPressed: () {
-              // Jika user belum memilih tanggal spesifik (Semua Waktu)
               if (_selectedDate == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -229,7 +231,6 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
                   ),
                 );
               } else {
-                // Jalankan fungsi unduh dengan tanggal yang sedang dipilih
                 _unduhLaporanHarian(_selectedDate!);
               }
             },
@@ -262,6 +263,8 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
                   onChanged: (value) {
                     setState(() {
                       _searchQuery = value;
+                      _documentLimit = 10;
+                      _cachedDocs = null;
                     });
                   },
                   decoration: InputDecoration(
@@ -274,6 +277,8 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
                               _searchController.clear();
                               setState(() {
                                 _searchQuery = '';
+                                _documentLimit = 10;
+                                _cachedDocs = null;
                               });
                             },
                           )
@@ -336,9 +341,8 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
                       icon: const Icon(Icons.calendar_month, size: 18),
                       label: const Text("Pilih Hari"),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            _themeLightColor, // Gunakan warna light tema
-                        foregroundColor: _themeColor, // Gunakan warna tema
+                        backgroundColor: _themeLightColor,
+                        foregroundColor: _themeColor,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -356,7 +360,7 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
                   ? FirebaseFirestore.instance
                         .collection('pemeriksaan')
                         .orderBy('tanggal', descending: true)
-                        .limit(50) // Menyamakan dengan riwayat bidan
+                        .limit(_documentLimit)
                         .snapshots()
                   : FirebaseFirestore.instance
                         .collection('pemeriksaan')
@@ -387,14 +391,20 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
                           ),
                         )
                         .orderBy('tanggal', descending: true)
+                        .limit(_documentLimit)
                         .snapshots(),
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+                if (snapshot.hasData) {
+                  _cachedDocs = snapshot.data!.docs;
+                }
+
+                if (_cachedDocs == null &&
+                    snapshot.connectionState == ConnectionState.waiting) {
                   return Center(
                     child: CircularProgressIndicator(color: _themeColor),
                   );
                 }
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                if (_cachedDocs == null || _cachedDocs!.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -419,7 +429,7 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
                     ),
                   );
                 }
-                var rawDocs = snapshot.data!.docs;
+                var rawDocs = _cachedDocs!;
                 var filteredDocs = rawDocs.where((doc) {
                   var data = doc.data() as Map<String, dynamic>;
                   String nama = (data['namaBalita'] ?? '')
@@ -452,12 +462,14 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
                   );
                 }
                 return ListView.builder(
+                  controller: _scrollController,
                   padding: const EdgeInsets.all(20),
                   itemCount: filteredDocs.length,
                   itemBuilder: (context, index) {
                     var data =
                         filteredDocs[index].data() as Map<String, dynamic>;
                     String balitaId = data['balitaId'] ?? '';
+                    String pemeriksaanId = filteredDocs[index].id;
                     String namaAnak =
                         data['namaBalita'] ?? 'Nama Tidak Diketahui';
                     String status = data['statusStunting'] ?? 'Normal';
@@ -466,6 +478,20 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
                     String infoWaktu = _selectedDate == null
                         ? "${waktu.day} ${_namaBulan[waktu.month]}   ${waktu.hour.toString().padLeft(2, '0')}:${waktu.minute.toString().padLeft(2, '0')}"
                         : "${waktu.hour.toString().padLeft(2, '0')}:${waktu.minute.toString().padLeft(2, '0')}";
+
+                    String strBb = data['beratBadan'] != null
+                        ? "${data['beratBadan']} kg"
+                        : "-";
+                    String strTb = data['tinggiBadan'] != null
+                        ? "${data['tinggiBadan']} cm"
+                        : "-";
+                    String strLk = data['lingkarKepala'] != null
+                        ? "${data['lingkarKepala']} cm"
+                        : "-";
+                    String strLila = data['lingkarLengan'] != null
+                        ? "${data['lingkarLengan']} cm"
+                        : "-";
+
                     return Container(
                       margin: const EdgeInsets.only(bottom: 16),
                       padding: const EdgeInsets.all(16),
@@ -480,99 +506,131 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
                           ),
                         ],
                       ),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          FutureBuilder<DocumentSnapshot>(
-                            future: FirebaseFirestore.instance
-                                .collection('balita')
-                                .doc(balitaId)
-                                .get(),
-                            builder: (context, balitaSnapshot) {
-                              String? fotoUrl;
-                              if (balitaSnapshot.hasData &&
-                                  balitaSnapshot.data!.exists) {
-                                var balitaData =
-                                    balitaSnapshot.data!.data()
-                                        as Map<String, dynamic>;
-                                fotoUrl = balitaData['fotoUrl'];
-                              }
-                              return Container(
-                                width: 48,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: _getStatusColor(
-                                    status,
-                                  ).withValues(alpha: 0.1),
-                                  shape: BoxShape.circle,
-                                  image: fotoUrl != null && fotoUrl.isNotEmpty
-                                      ? DecorationImage(
-                                          image: NetworkImage(fotoUrl),
-                                          fit: BoxFit.cover,
-                                        )
-                                      : null,
-                                ),
-                                child: (fotoUrl == null || fotoUrl.isEmpty)
-                                    ? Center(
-                                        child: Icon(
-                                          Icons.child_care,
-                                          color: _getStatusColor(status),
-                                        ),
-                                      )
-                                    : null,
-                              );
-                            },
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  namaAnak,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF2C3E50),
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.access_time,
-                                      size: 14,
-                                      color: Colors.grey,
+                          Row(
+                            children: [
+                              FutureBuilder<DocumentSnapshot>(
+                                future: FirebaseFirestore.instance
+                                    .collection('balita')
+                                    .doc(balitaId)
+                                    .get(),
+                                builder: (context, balitaSnapshot) {
+                                  String? fotoUrl;
+                                  if (balitaSnapshot.hasData &&
+                                      balitaSnapshot.data!.exists) {
+                                    var balitaData =
+                                        balitaSnapshot.data!.data()
+                                            as Map<String, dynamic>;
+                                    fotoUrl = balitaData['fotoUrl'];
+                                  }
+                                  return Container(
+                                    width: 48,
+                                    height: 48,
+                                    decoration: BoxDecoration(
+                                      color: _getStatusColor(
+                                        status,
+                                      ).withValues(alpha: 0.1),
+                                      shape: BoxShape.circle,
+                                      image:
+                                          fotoUrl != null && fotoUrl.isNotEmpty
+                                          ? DecorationImage(
+                                              image: NetworkImage(fotoUrl),
+                                              fit: BoxFit.cover,
+                                            )
+                                          : null,
                                     ),
-                                    const SizedBox(width: 4),
+                                    child: (fotoUrl == null || fotoUrl.isEmpty)
+                                        ? Center(
+                                            child: Icon(
+                                              Icons.child_care,
+                                              color: _getStatusColor(status),
+                                            ),
+                                          )
+                                        : null,
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
                                     Text(
-                                      infoWaktu,
+                                      namaAnak,
                                       style: const TextStyle(
-                                        fontSize: 12,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF2C3E50),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.access_time,
+                                          size: 14,
+                                          color: Colors.grey,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          infoWaktu,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      pemeriksaanId,
+                                      style: const TextStyle(
+                                        fontSize: 11,
                                         color: Colors.grey,
+                                        fontFamily: 'monospace',
                                       ),
                                     ),
                                   ],
                                 ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _getStatusColor(status),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              status,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
                               ),
-                            ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _getStatusColor(status),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  status,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          const Divider(height: 1, color: Color(0xFFEEEEEE)),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildDataCol("Berat Badan", strBb),
+                              ),
+                              Expanded(child: _buildDataCol("Tinggi", strTb)),
+                              Expanded(
+                                child: _buildDataCol("L. Kepala", strLk),
+                              ),
+                              Expanded(
+                                child: _buildDataCol("L. Lengan", strLila),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -583,6 +641,164 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDataCol(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10,
+            color: Colors.grey,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 13,
+            color: Color(0xFF2C3E50),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class PemeriksaanCalendarDialog extends StatefulWidget {
+  final DateTime? initialDate;
+  final Color themeColor;
+
+  const PemeriksaanCalendarDialog({
+    super.key,
+    this.initialDate,
+    required this.themeColor,
+  });
+
+  @override
+  State<PemeriksaanCalendarDialog> createState() =>
+      _PemeriksaanCalendarDialogState();
+}
+
+class _PemeriksaanCalendarDialogState extends State<PemeriksaanCalendarDialog> {
+  late DateTime _focusedDay;
+  DateTime? _selectedDay;
+  Set<DateTime> _eventDates = {};
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusedDay = widget.initialDate ?? DateTime.now();
+    _selectedDay = widget.initialDate;
+    _fetchEventDates();
+  }
+
+  Future<void> _fetchEventDates() async {
+    try {
+      final snap = await FirebaseFirestore.instance
+          .collection('pemeriksaan')
+          .get();
+      Set<DateTime> dates = {};
+      for (var doc in snap.docs) {
+        var data = doc.data();
+        if (data['tanggal'] != null) {
+          DateTime dt = (data['tanggal'] as Timestamp).toDate();
+          dates.add(DateTime(dt.year, dt.month, dt.day));
+        }
+      }
+      if (mounted) {
+        setState(() {
+          _eventDates = dates;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_isLoading)
+              Padding(
+                padding: const EdgeInsets.all(40.0),
+                child: CircularProgressIndicator(color: widget.themeColor),
+              )
+            else
+              TableCalendar(
+                firstDay: DateTime(2020),
+                lastDay: DateTime.now(),
+                focusedDay: _focusedDay,
+                selectedDayPredicate: (day) {
+                  return isSameDay(_selectedDay, day);
+                },
+                onDaySelected: (selectedDay, focusedDay) {
+                  setState(() {
+                    _selectedDay = selectedDay;
+                    _focusedDay = focusedDay;
+                  });
+                  Navigator.pop(context, selectedDay);
+                },
+                onPageChanged: (focusedDay) {
+                  _focusedDay = focusedDay;
+                },
+                eventLoader: (day) {
+                  DateTime normalized = DateTime(day.year, day.month, day.day);
+                  if (_eventDates.contains(normalized)) {
+                    return ['event'];
+                  }
+                  return [];
+                },
+                calendarStyle: CalendarStyle(
+                  markerDecoration: BoxDecoration(
+                    color: widget.themeColor,
+                    shape: BoxShape.circle,
+                  ),
+                  selectedDecoration: BoxDecoration(
+                    color: widget.themeColor,
+                    shape: BoxShape.circle,
+                  ),
+                  todayDecoration: BoxDecoration(
+                    color: widget.themeColor.withValues(alpha: 0.5),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                headerStyle: const HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
+                ),
+              ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                style: TextButton.styleFrom(foregroundColor: widget.themeColor),
+                child: const Text('Batal'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -178,12 +178,12 @@ class UserHeaderSection extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   fullName,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 22,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
                   ),
@@ -406,7 +406,7 @@ class QuickMenuAccess extends StatelessWidget {
           Wrap(
             spacing: 16.0,
             runSpacing: 24.0,
-            alignment: WrapAlignment.start, // Rata Kiri
+            alignment: WrapAlignment.start,
             children: [
               _buildMenuItem(
                 icon: Icons.person_rounded,
@@ -493,7 +493,7 @@ class QuickMenuAccess extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return SizedBox(
-      width: 72,
+      width: 64,
       child: Column(
         children: [
           Material(
@@ -512,12 +512,12 @@ class QuickMenuAccess extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Text(
             label,
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: FontWeight.w600,
               color: Colors.black87,
               height: 1.25,
@@ -531,7 +531,6 @@ class QuickMenuAccess extends StatelessWidget {
   }
 }
 
-// Widget Baru: Daftar Pengguna Terbaru
 class LatestUsersSection extends StatelessWidget {
   const LatestUsersSection({super.key});
 

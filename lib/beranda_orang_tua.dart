@@ -170,19 +170,19 @@ class UserHeaderSection extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Halo, selamat datang',
+                  'Selamat Datang,',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   fullName,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 22,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
                   ),
@@ -403,74 +403,69 @@ class QuickMenuAccess extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildMenuItem(
-                  icon: Icons.child_care_rounded,
-                  color: Colors.green,
-                  label: "Data\nBalita",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Balita(userId: userId),
+          Wrap(
+            spacing: 16.0,
+            runSpacing: 24.0,
+            alignment: WrapAlignment.start,
+            children: [
+              _buildMenuItem(
+                icon: Icons.child_care_rounded,
+                color: Colors.green,
+                label: "Data\nBalita",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Balita(userId: userId),
+                    ),
+                  );
+                },
+              ),
+              _buildMenuItem(
+                icon: Icons.calendar_month_rounded,
+                color: Colors.orange,
+                label: "Jadwal\nPosyandu",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const Jadwal()),
+                  );
+                },
+              ),
+              _buildMenuItem(
+                icon: Icons.menu_book_rounded,
+                color: Colors.purple,
+                label: "Edukasi\nGizi",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Edukasi(
+                        userId: userId,
+                        fullName: fullName,
+                        role: 'orang-tua',
                       ),
-                    );
-                  },
-                ),
-                const SizedBox(width: 16),
-                _buildMenuItem(
-                  icon: Icons.calendar_month_rounded,
-                  color: Colors.orange,
-                  label: "Jadwal\nPosyandu",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const Jadwal()),
-                    );
-                  },
-                ),
-                const SizedBox(width: 16),
-                _buildMenuItem(
-                  icon: Icons.menu_book_rounded,
-                  color: Colors.purple,
-                  label: "Edukasi\nGizi",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Edukasi(
-                          userId: userId,
-                          fullName: fullName,
-                          role: 'orang-tua',
-                        ),
+                    ),
+                  );
+                },
+              ),
+              _buildMenuItem(
+                icon: Icons.chat_bubble_rounded,
+                color: Colors.redAccent,
+                label: "Konsultasi\nBidan",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => KonsultasiOrangTuaScreen(
+                        userId: userId,
+                        fullName: fullName,
                       ),
-                    );
-                  },
-                ),
-                const SizedBox(width: 16),
-                _buildMenuItem(
-                  icon: Icons.chat_bubble_rounded,
-                  color: Colors.redAccent,
-                  label: "Konsultasi\nBidan",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => KonsultasiOrangTuaScreen(
-                          userId: userId,
-                          fullName: fullName,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
         ],
       ),
@@ -484,7 +479,7 @@ class QuickMenuAccess extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return SizedBox(
-      width: 72,
+      width: 64,
       child: Column(
         children: [
           Material(
@@ -503,12 +498,12 @@ class QuickMenuAccess extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Text(
             label,
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: FontWeight.w600,
               color: Colors.black87,
               height: 1.25,

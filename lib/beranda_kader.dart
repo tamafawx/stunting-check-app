@@ -106,7 +106,7 @@ class UserHeaderSection extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 70, 24, 40),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF1976D2), Color(0xFF42A5F5)], // Gradien Biru Kader
+          colors: [Color(0xFF1976D2), Color(0xFF42A5F5)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -177,12 +177,12 @@ class UserHeaderSection extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   fullName,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 22,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
                   ),
@@ -517,7 +517,7 @@ class QuickMenuAccess extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return SizedBox(
-      width: 72,
+      width: 64,
       child: Column(
         children: [
           Material(
@@ -536,12 +536,12 @@ class QuickMenuAccess extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Text(
             label,
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: FontWeight.w600,
               color: Colors.black87,
               height: 1.25,
@@ -656,7 +656,8 @@ class StuntingPieChartSection extends StatelessWidget {
                         statusRaw.contains('sangat pendek')) {
                       countTinggi++;
                     } else if (statusRaw.contains('sedang') ||
-                        statusRaw.contains('pendek')) {
+                        statusRaw.contains('pendek') ||
+                        statusRaw.contains('rendah')) {
                       countRendah++;
                     } else if (statusRaw.contains('belum diukur')) {
                       countBelumDiukur++;
