@@ -13,7 +13,7 @@ class RiwayatPemeriksaan extends StatefulWidget {
 }
 
 class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
-  DateTime? _selectedDate;
+  DateTime _selectedDate = DateTime.now();
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
@@ -51,6 +51,10 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
   ];
 
   String _formatTanggal(DateTime date) {
+    final now = DateTime.now();
+    if (date.year == now.year && date.month == now.month && date.day == now.day) {
+      return "Hari Ini";
+    }
     return "${date.day} ${_namaBulan[date.month]} ${date.year}";
   }
 
@@ -59,14 +63,6 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
-  }
-
-  void _resetFilter() {
-    setState(() {
-      _selectedDate = null;
-      _documentLimit = 10;
-      _cachedDocs = null;
-    });
   }
 
   Color get _themeColor {
@@ -221,18 +217,7 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
             icon: const Icon(Icons.download_outlined, color: Colors.white),
             tooltip: 'Unduh Rekap Harian',
             onPressed: () {
-              if (_selectedDate == null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Silakan pilih tanggal (hari) terlebih dahulu untuk mengunduh rekap harian.',
-                    ),
-                    backgroundColor: Colors.orange,
-                  ),
-                );
-              } else {
-                _unduhLaporanHarian(_selectedDate!);
-              }
+              _unduhLaporanHarian(_selectedDate);
             },
           ),
           const SizedBox(width: 8),
@@ -311,27 +296,13 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
                         Row(
                           children: [
                             Text(
-                              _selectedDate == null
-                                  ? "Semua Waktu"
-                                  : _formatTanggal(_selectedDate!),
+                              _formatTanggal(_selectedDate),
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF2C3E50),
                               ),
                             ),
-                            if (_selectedDate != null)
-                              Padding(
-                                padding: const EdgeInsets.only(left: 8.0),
-                                child: InkWell(
-                                  onTap: _resetFilter,
-                                  child: const Icon(
-                                    Icons.cancel,
-                                    size: 18,
-                                    color: Colors.redAccent,
-                                  ),
-                                ),
-                              ),
                           ],
                         ),
                       ],
@@ -356,21 +327,15 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: _selectedDate == null
-                  ? FirebaseFirestore.instance
-                        .collection('pemeriksaan')
-                        .orderBy('tanggal', descending: true)
-                        .limit(_documentLimit)
-                        .snapshots()
-                  : FirebaseFirestore.instance
+              stream: FirebaseFirestore.instance
                         .collection('pemeriksaan')
                         .where(
                           'tanggal',
                           isGreaterThanOrEqualTo: Timestamp.fromDate(
                             DateTime(
-                              _selectedDate!.year,
-                              _selectedDate!.month,
-                              _selectedDate!.day,
+                              _selectedDate.year,
+                              _selectedDate.month,
+                              _selectedDate.day,
                               0,
                               0,
                               0,
@@ -381,9 +346,9 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
                           'tanggal',
                           isLessThanOrEqualTo: Timestamp.fromDate(
                             DateTime(
-                              _selectedDate!.year,
-                              _selectedDate!.month,
-                              _selectedDate!.day,
+                              _selectedDate.year,
+                              _selectedDate.month,
+                              _selectedDate.day,
                               23,
                               59,
                               59,
@@ -416,9 +381,7 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          _selectedDate == null
-                              ? "Belum ada riwayat pemeriksaan."
-                              : "Tidak ada riwayat pada tanggal ini.",
+                          "Tidak ada riwayat pada tanggal ini.",
                           style: const TextStyle(
                             fontSize: 14,
                             color: Colors.grey,
@@ -475,9 +438,7 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
                     String status = data['statusStunting'] ?? 'Normal';
                     Timestamp timestamp = data['tanggal'] ?? Timestamp.now();
                     DateTime waktu = timestamp.toDate();
-                    String infoWaktu = _selectedDate == null
-                        ? "${waktu.day} ${_namaBulan[waktu.month]}   ${waktu.hour.toString().padLeft(2, '0')}:${waktu.minute.toString().padLeft(2, '0')}"
-                        : "${waktu.hour.toString().padLeft(2, '0')}:${waktu.minute.toString().padLeft(2, '0')}";
+                    String infoWaktu = "${waktu.hour.toString().padLeft(2, '0')}:${waktu.minute.toString().padLeft(2, '0')}";
 
                     String strBb = data['beratBadan'] != null
                         ? "${data['beratBadan']} kg"
@@ -690,6 +651,7 @@ class _PemeriksaanCalendarDialogState extends State<PemeriksaanCalendarDialog> {
   late DateTime _focusedDay;
   DateTime? _selectedDay;
   Set<DateTime> _eventDates = {};
+  DateTime? _firstDataDate;
   bool _isLoading = true;
 
   @override
@@ -706,16 +668,22 @@ class _PemeriksaanCalendarDialogState extends State<PemeriksaanCalendarDialog> {
           .collection('pemeriksaan')
           .get();
       Set<DateTime> dates = {};
+      DateTime? minDate;
       for (var doc in snap.docs) {
         var data = doc.data();
         if (data['tanggal'] != null) {
           DateTime dt = (data['tanggal'] as Timestamp).toDate();
-          dates.add(DateTime(dt.year, dt.month, dt.day));
+          DateTime normalized = DateTime(dt.year, dt.month, dt.day);
+          dates.add(normalized);
+          if (minDate == null || normalized.isBefore(minDate)) {
+            minDate = normalized;
+          }
         }
       }
       if (mounted) {
         setState(() {
           _eventDates = dates;
+          _firstDataDate = minDate;
           _isLoading = false;
         });
       }
@@ -730,10 +698,21 @@ class _PemeriksaanCalendarDialogState extends State<PemeriksaanCalendarDialog> {
 
   @override
   Widget build(BuildContext context) {
+    DateTime firstDay = _firstDataDate ?? DateTime.now();
+    if (firstDay.isAfter(DateTime.now())) {
+      firstDay = DateTime.now();
+    }
+    // Ensure _focusedDay is not before firstDay
+    if (_focusedDay.isBefore(firstDay)) {
+      _focusedDay = firstDay;
+    }
+
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        padding: const EdgeInsets.all(16),
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -744,7 +723,8 @@ class _PemeriksaanCalendarDialogState extends State<PemeriksaanCalendarDialog> {
               )
             else
               TableCalendar(
-                firstDay: DateTime(2020),
+                rowHeight: 60.0,
+                firstDay: firstDay,
                 lastDay: DateTime.now(),
                 focusedDay: _focusedDay,
                 selectedDayPredicate: (day) {
@@ -768,6 +748,8 @@ class _PemeriksaanCalendarDialogState extends State<PemeriksaanCalendarDialog> {
                   return [];
                 },
                 calendarStyle: CalendarStyle(
+                  outsideDaysVisible: false,
+                  markerMargin: const EdgeInsets.only(top: 14.0),
                   markerDecoration: BoxDecoration(
                     color: widget.themeColor,
                     shape: BoxShape.circle,
@@ -777,24 +759,60 @@ class _PemeriksaanCalendarDialogState extends State<PemeriksaanCalendarDialog> {
                     shape: BoxShape.circle,
                   ),
                   todayDecoration: BoxDecoration(
-                    color: widget.themeColor.withValues(alpha: 0.5),
+                    color: widget.themeColor.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
+                  ),
+                  todayTextStyle: TextStyle(
+                    color: widget.themeColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  defaultTextStyle: const TextStyle(fontSize: 14),
+                  weekendTextStyle: const TextStyle(
+                    fontSize: 14, 
+                    color: Colors.redAccent,
                   ),
                 ),
                 headerStyle: const HeaderStyle(
                   formatButtonVisible: false,
                   titleCentered: true,
+                  titleTextStyle: TextStyle(
+                    fontSize: 16, 
+                    fontWeight: FontWeight.bold,
+                  ),
+                  leftChevronIcon: Icon(Icons.chevron_left, color: Colors.black54),
+                  rightChevronIcon: Icon(Icons.chevron_right, color: Colors.black54),
+                ),
+                daysOfWeekStyle: const DaysOfWeekStyle(
+                  weekdayStyle: TextStyle(
+                    fontSize: 12, 
+                    fontWeight: FontWeight.w600, 
+                    color: Colors.black54,
+                  ),
+                  weekendStyle: TextStyle(
+                    fontSize: 12, 
+                    fontWeight: FontWeight.w600, 
+                    color: Colors.redAccent,
+                  ),
                 ),
               ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                style: TextButton.styleFrom(foregroundColor: widget.themeColor),
-                child: const Text('Batal'),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.grey[700],
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Tutup',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
