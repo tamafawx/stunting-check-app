@@ -27,6 +27,7 @@ initialize_app()
 
 from notifikasi_pengumuman import kirim_notifikasi_pengumuman
 from notifikasi_edukasi import kirim_notifikasi_edukasi
+from notifikasi_jadwal import kirim_notifikasi_jadwal
 from stunting_calc import proses_kalkulasi_stunting
 
 
