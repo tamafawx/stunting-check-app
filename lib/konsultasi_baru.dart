@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'orang_tua/percakapan_konsultasi_orang_tua.dart';
+import 'konsultasi_percakapan.dart';
 import 'konsultasi_pilih_bidan.dart';
 
 class KonsultasiBaru extends StatefulWidget {
@@ -50,7 +50,7 @@ class _KonsultasiBaruState extends State<KonsultasiBaru> {
       if (_selectedKader == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Harap pilih kader terlebih dahulu!'),
+            content: Text('Harap pilih bidan terlebih dahulu!'),
             backgroundColor: Colors.amber,
           ),
         );
@@ -83,14 +83,15 @@ class _KonsultasiBaruState extends State<KonsultasiBaru> {
         });
 
         if (mounted) {
-          // Ganti halaman (Replace) ke Room Chat
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => ChatKonsultasiScreen(
+              builder: (context) => KonsultasiPercakapanScreen(
                 konsultasiId: chatRef.id,
                 lawanBicaraName: _selectedKader!['name']!,
+                lawanBicaraId: _selectedKader!['id']!,
                 currentUserId: widget.userId,
+                role: 'orang_tua',
               ),
             ),
           );
