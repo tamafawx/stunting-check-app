@@ -11,7 +11,6 @@ import 'edukasi.dart';
 import 'balita_kelola.dart';
 import 'balita_detail.dart';
 import 'pemeriksaan_balita.dart';
-import 'kader/konsultasi_kader.dart';
 import 'notifikasi.dart';
 
 class UserHeaderSection extends StatelessWidget {
@@ -482,22 +481,6 @@ class QuickMenuAccess extends StatelessWidget {
                         userId: userId,
                         fullName: fullName,
                         role: 'kader',
-                      ),
-                    ),
-                  );
-                },
-              ),
-              _buildMenuItem(
-                icon: Icons.chat_bubble_rounded,
-                color: Colors.redAccent,
-                label: "Konsultasi",
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => KonsultasiKaderScreen(
-                        userId: userId,
-                        fullName: fullName,
                       ),
                     ),
                   );
