@@ -22,9 +22,9 @@ class DetailEdukasi extends StatelessWidget {
     String judul = data['judul'] ?? 'Tanpa Judul';
     String konten = data['konten'] ?? '';
     String imageUrl = data['imageUrl'] ?? '';
-    String namaPenulis = data['namaPenulis'] ?? 'Kader';
+    String namaPenulis = data['namaPenulis'] ?? 'Bidan';
     String fotoPenulis = data['fotoPenulis'] ?? '';
-    String rolePenulis = data['rolePenulis'] ?? 'Kader Posyandu';
+    String rolePenulis = data['rolePenulis'] ?? 'Bidan';
 
     String kategoriStatus = data['kategoriStatus'] ?? 'Semua (Umum)';
 
@@ -178,11 +178,11 @@ class DetailEdukasi extends StatelessWidget {
                   Text(
                     konten,
                     style: const TextStyle(
-                      fontSize: 15,
+                      fontSize: 14,
                       color: Colors.black87,
                       height: 1.8,
                     ),
-                    textAlign: TextAlign.justify,
+                    textAlign: TextAlign.start,
                   ),
                   const SizedBox(height: 20),
                   Container(

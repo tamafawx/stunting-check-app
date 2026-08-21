@@ -146,7 +146,8 @@ class _EdukasiState extends State<Edukasi> {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      floatingActionButton: (widget.role != 'orang-tua')
+      floatingActionButton:
+          (widget.role != 'orang-tua' && widget.role != 'kader')
           ? FloatingActionButton(
               onPressed: () {
                 Navigator.push(
