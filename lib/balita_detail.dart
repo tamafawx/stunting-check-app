@@ -320,40 +320,39 @@ class _DetailBalitaState extends State<DetailBalita>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              "Catatan & Rekomendasi Petugas",
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+            const Expanded(
+              child: Text(
+                "Catatan & Rekomendasi Petugas",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
             ),
             if (!hasCatatan &&
                 (widget.role == 'kader' || widget.role == 'bidan'))
-              InkWell(
-                onTap: () => _showAddCatatanDialog(pemeriksaanId),
-                child: Container(
+              TextButton.icon(
+                onPressed: () => _showAddCatatanDialog(pemeriksaanId),
+                icon: Icon(Icons.add, size: 16, color: themeColor),
+                label: Text(
+                  "Tambah",
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: themeColor,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  backgroundColor: themeColor.withValues(alpha: 0.1),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
+                    horizontal: 12,
+                    vertical: 8,
                   ),
-                  decoration: BoxDecoration(
-                    color: themeColor.withValues(alpha: 0.1),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.add, size: 16, color: themeColor),
-                      const SizedBox(width: 4),
-                      Text(
-                        "Tambah",
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: themeColor,
-                        ),
-                      ),
-                    ],
                   ),
                 ),
               ),
