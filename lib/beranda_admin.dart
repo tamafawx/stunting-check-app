@@ -13,6 +13,7 @@ import 'ubah_profile.dart';
 import 'jadwal_kelola.dart';
 import 'notifikasi.dart';
 import 'pengumuman_tambah.dart';
+import 'laporan.dart';
 
 class UserHeaderSection extends StatelessWidget {
   final String userId;
@@ -201,7 +202,7 @@ class UserHeaderSection extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text(
-                    'Admin Pusat',
+                    'Admin',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 11,
@@ -461,6 +462,19 @@ class QuickMenuAccess extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (context) =>
                           TambahPengumuman(userId: userId, fullName: fullName),
+                    ),
+                  );
+                },
+              ),
+              _buildMenuItem(
+                icon: Icons.analytics_rounded,
+                color: Colors.indigo,
+                label: "Laporan",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LaporanPage(),
                     ),
                   );
                 },

@@ -199,7 +199,7 @@ class UserHeaderSection extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text(
-                    'Bidan Desa Posyandu',
+                    'Bidan',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 11,
