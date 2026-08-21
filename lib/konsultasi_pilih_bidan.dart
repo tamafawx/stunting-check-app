@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class PilihKaderKonsultasiScreen extends StatefulWidget {
-  const PilihKaderKonsultasiScreen({super.key});
+class KonsultasiPilihBidan extends StatefulWidget {
+  const KonsultasiPilihBidan({super.key});
 
   @override
-  State<PilihKaderKonsultasiScreen> createState() =>
-      _PilihKaderKonsultasiScreenState();
+  State<KonsultasiPilihBidan> createState() => _KonsultasiPilihBidanState();
 }
 
-class _PilihKaderKonsultasiScreenState
-    extends State<PilihKaderKonsultasiScreen> {
+class _KonsultasiPilihBidanState extends State<KonsultasiPilihBidan> {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
@@ -63,7 +61,7 @@ class _PilihKaderKonsultasiScreenState
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('users')
-                  .where('role', whereIn: ["kader", "bidan"])
+                  .where('role', whereIn: ["bidan"])
                   .where('status', isEqualTo: 'aktif')
                   .snapshots(),
               builder: (context, snapshot) {

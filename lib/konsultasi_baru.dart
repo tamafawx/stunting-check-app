@@ -1,25 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'percakapan_konsultasi_orang_tua.dart';
-import 'pilih_kader_konsultasi_orang_tua.dart';
+import 'orang_tua/percakapan_konsultasi_orang_tua.dart';
+import 'konsultasi_pilih_bidan.dart';
 
-class MulaiKonsultasiOrangTuaScreen extends StatefulWidget {
+class KonsultasiBaru extends StatefulWidget {
   final String userId;
   final String fullName;
 
-  const MulaiKonsultasiOrangTuaScreen({
+  const KonsultasiBaru({
     super.key,
     required this.userId,
     required this.fullName,
   });
 
   @override
-  State<MulaiKonsultasiOrangTuaScreen> createState() =>
-      _MulaiKonsultasiOrangTuaScreenState();
+  State<KonsultasiBaru> createState() => _KonsultasiBaruState();
 }
 
-class _MulaiKonsultasiOrangTuaScreenState
-    extends State<MulaiKonsultasiOrangTuaScreen> {
+class _KonsultasiBaruState extends State<KonsultasiBaru> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _judulController = TextEditingController();
   final TextEditingController _pesanController = TextEditingController();
@@ -37,9 +35,7 @@ class _MulaiKonsultasiOrangTuaScreenState
   Future<void> _pilihKader() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const PilihKaderKonsultasiScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const KonsultasiPilihBidan()),
     );
 
     if (result != null && result is Map<String, String>) {
@@ -146,13 +142,13 @@ class _MulaiKonsultasiOrangTuaScreenState
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      "Pilih kader dan sampaikan pertanyaan terkait perkembangan, gizi, atau kesehatan balita Anda.",
+                      "Pilih bidan dan sampaikan pertanyaan terkait perkembangan, gizi, atau kesehatan balita Anda.",
                       style: TextStyle(color: Colors.black54, height: 1.5),
                     ),
                     const SizedBox(height: 32),
 
                     const Text(
-                      "Pilih Kader",
+                      "Pilih Bidan",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
@@ -185,7 +181,7 @@ class _MulaiKonsultasiOrangTuaScreenState
                             Expanded(
                               child: Text(
                                 _selectedKader == null
-                                    ? 'Ketuk untuk memilih kader'
+                                    ? 'Ketuk untuk memilih bidan'
                                     : _selectedKader!['name']!,
                                 style: TextStyle(
                                   color: _selectedKader == null
