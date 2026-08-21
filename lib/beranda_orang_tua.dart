@@ -784,7 +784,7 @@ class JadwalMendatangSection extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: Colors.orange,
+                    color: Colors.green,
                   ),
                 ),
               ),
