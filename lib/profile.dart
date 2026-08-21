@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../login.dart';
 import 'ubah_profile.dart';
+import 'pusat_bantuan.dart';
 
 class ProfileHeader extends StatelessWidget {
   final String fullName;
@@ -380,7 +381,13 @@ class Profile extends StatelessWidget {
                               title: "Pusat Bantuan",
                               iconColor: Colors.teal,
                               onTap: () {
-                                // Aksi Pusat Bantuan
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        PusatBantuan(role: displayRole),
+                                  ),
+                                );
                               },
                             ),
                           ],
@@ -422,7 +429,7 @@ class Profile extends StatelessWidget {
                         child: Column(
                           children: [
                             const Text(
-                              "Versi 1.0.0",
+                              "Versi 1.1.0",
                               style: TextStyle(
                                 color: Color(0xFF94A3B8),
                                 fontSize: 13,

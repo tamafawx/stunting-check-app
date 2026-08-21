@@ -124,7 +124,7 @@ Future<void> generateLaporanPemeriksaanHarian({
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
               pw.Text(
-                "Dicetak: $tanggalCetak \u2022 Aplikasi Posyandu",
+                "Dicetak: $tanggalCetak   |   Aplikasi Posyandu",
                 style: pw.TextStyle(
                   fontSize: 8.5,
                   fontStyle: pw.FontStyle.italic,

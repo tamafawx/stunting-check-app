@@ -237,7 +237,7 @@ Future<void> generateLaporanBalita({
                 ),
                 pw.SizedBox(width: 8),
                 pw.SizedBox(
-                  width: 65,
+                  width: 90,
                   child: pw.Text(
                     label1,
                     style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
@@ -609,7 +609,6 @@ Future<void> generateLaporanBalita({
     }
 
     return pw.Row(
-      // PERBAIKAN: Jangan pernah gunakan pw.CrossAxisAlignment.stretch di sini
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Expanded(
@@ -778,7 +777,7 @@ Future<void> generateLaporanBalita({
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
               pw.Text(
-                "Dicetak: $tanggalCetak \u2022 Aplikasi Posyandu",
+                "Dicetak: $tanggalCetak   |   Aplikasi Posyandu",
                 style: pw.TextStyle(
                   fontSize: 8.5,
                   fontStyle: pw.FontStyle.italic,
@@ -804,7 +803,6 @@ Future<void> generateLaporanBalita({
           ? buildHeaderBanner()
           : buildHeaderLanjutan(context.pageNumber),
       footer: (context) => buildFooter(context),
-      // PERBAIKAN: Menghapus Column utama agar setiap blok padding berdiri mandiri dan bebas dipotong halaman.
       build: (context) => [
         pw.Padding(
           padding: const pw.EdgeInsets.fromLTRB(36, 28, 36, 10),
