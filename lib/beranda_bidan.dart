@@ -7,7 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter_stunting_posyandu/bidan/konsultasi_bidan.dart';
+import 'konsultasi_beranda_percakapan.dart';
 import 'edukasi.dart';
 import 'balita_kelola.dart';
 import 'balita_detail.dart';
@@ -477,7 +477,11 @@ class QuickMenuAccessBidan extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (BuildContext context) =>
-                          KonsultasiBidan(userId: userId, fullName: fullName),
+                          KonsultasiBerandaPercakapan(
+                        userId: userId,
+                        fullName: fullName,
+                        role: 'bidan',
+                      ),
                     ),
                   );
                 },

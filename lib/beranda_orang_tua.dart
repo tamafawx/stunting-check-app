@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
-import 'package:flutter_stunting_posyandu/orang_tua/konsultasi_orang_tua.dart';
+import 'konsultasi_beranda_percakapan.dart';
 import 'edukasi.dart';
 import 'edukasi_detail.dart';
 import 'balita.dart';
@@ -452,14 +452,15 @@ class QuickMenuAccess extends StatelessWidget {
               _buildMenuItem(
                 icon: Icons.chat_bubble_rounded,
                 color: Colors.redAccent,
-                label: "Konsultasi\nBidan",
+                label: "Konsultasi",
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => KonsultasiOrangTuaScreen(
-                        userId: userId,
+                      builder: (context) => KonsultasiBerandaPercakapan(
                         fullName: fullName,
+                        userId: userId,
+                        role: 'orang-tua',
                       ),
                     ),
                   );
