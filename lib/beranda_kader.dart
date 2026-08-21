@@ -7,10 +7,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 import 'edukasi.dart';
+import 'edukasi_detail.dart';
 import 'balita_kelola.dart';
 import 'balita_detail.dart';
 import 'pemeriksaan_balita.dart';
+import 'jadwal.dart';
 import 'notifikasi.dart';
 
 class UserHeaderSection extends StatelessWidget {
@@ -486,6 +489,17 @@ class QuickMenuAccess extends StatelessWidget {
                   );
                 },
               ),
+              _buildMenuItem(
+                icon: Icons.calendar_month_rounded,
+                color: Colors.pink,
+                label: "Jadwal\nPosyandu",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const Jadwal(role: 'kader')),
+                  );
+                },
+              ),
             ],
           ),
         ],
@@ -658,21 +672,21 @@ class StuntingPieChartSection extends StatelessWidget {
                   return Row(
                     children: [
                       SizedBox(
-                        height: 140,
-                        width: 140,
+                        height: 110,
+                        width: 110,
                         child: PieChart(
                           PieChartData(
-                            sectionsSpace: 2,
-                            centerSpaceRadius: 30,
+                            sectionsSpace: 1,
+                            centerSpaceRadius: 22,
                             sections: [
                               if (countAman > 0)
                                 PieChartSectionData(
                                   color: Colors.green,
                                   value: countAman.toDouble(),
                                   title: '${pctAman.toStringAsFixed(0)}%',
-                                  radius: 40,
+                                  radius: 32,
                                   titleStyle: const TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                   ),
@@ -682,9 +696,9 @@ class StuntingPieChartSection extends StatelessWidget {
                                   color: Colors.orange,
                                   value: countRendah.toDouble(),
                                   title: '${pctRendah.toStringAsFixed(0)}%',
-                                  radius: 40,
+                                  radius: 32,
                                   titleStyle: const TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                   ),
@@ -694,9 +708,9 @@ class StuntingPieChartSection extends StatelessWidget {
                                   color: Colors.redAccent,
                                   value: countTinggi.toDouble(),
                                   title: '${pctTinggi.toStringAsFixed(0)}%',
-                                  radius: 40,
+                                  radius: 32,
                                   titleStyle: const TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                   ),
@@ -706,9 +720,9 @@ class StuntingPieChartSection extends StatelessWidget {
                                   color: Colors.grey,
                                   value: countBelumDiukur.toDouble(),
                                   title: '${pctBelum.toStringAsFixed(0)}%',
-                                  radius: 40,
+                                  radius: 32,
                                   titleStyle: const TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                   ),
@@ -763,12 +777,12 @@ class StuntingPieChartSection extends StatelessWidget {
 
   Widget _buildLegend(Color color, String text, int count, double pct) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
+      padding: const EdgeInsets.only(bottom: 6.0),
       child: Row(
         children: [
           Container(
-            width: 14,
-            height: 14,
+            width: 12,
+            height: 12,
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 8),
@@ -776,16 +790,18 @@ class StuntingPieChartSection extends StatelessWidget {
             child: Text(
               text,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 color: Colors.black87,
                 fontWeight: FontWeight.w600,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
           Text(
             "$count (${pct.toStringAsFixed(1)}%)",
             style: const TextStyle(
-              fontSize: 12,
+              fontSize: 11,
               color: Colors.black54,
               fontWeight: FontWeight.bold,
             ),
@@ -1043,6 +1059,397 @@ class LiveToddlersSection extends StatelessWidget {
   }
 }
 
+class JadwalMendatangSection extends StatelessWidget {
+  const JadwalMendatangSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    DateTime now = DateTime.now();
+    DateTime startOfToday = DateTime(now.year, now.month, now.day);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            spreadRadius: 1,
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Jadwal Mendatang",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const Jadwal(role: 'kader')),
+                  );
+                },
+                child: const Text(
+                  "Lihat Semua",
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('jadwal')
+                .where(
+                  'tanggal',
+                  isGreaterThanOrEqualTo: Timestamp.fromDate(startOfToday),
+                )
+                .orderBy('tanggal')
+                .limit(2)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: CircularProgressIndicator(color: Colors.orange),
+                  ),
+                );
+              }
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: Text(
+                      "Tidak ada jadwal dalam waktu dekat.",
+                      style: TextStyle(color: Colors.grey[500], fontSize: 13),
+                    ),
+                  ),
+                );
+              }
+              var listJadwal = snapshot.data!.docs;
+
+              return ListView.builder(
+                padding: EdgeInsets.zero,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: listJadwal.length,
+                itemBuilder: (context, index) {
+                  var data = listJadwal[index].data() as Map<String, dynamic>;
+                  String judul = data['judul'] ?? 'Tanpa Judul';
+                  String kategori = data['kategori'] ?? 'Posyandu';
+                  String lokasi = data['lokasi'] ?? '-';
+                  Timestamp? tanggalTs = data['tanggal'];
+                  DateTime tanggal = tanggalTs?.toDate() ?? DateTime.now();
+                  String formattedDate = DateFormat(
+                    'dd MMM yyyy',
+                  ).format(tanggal);
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12.0),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.orange.shade100),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            kategori == 'Posyandu'
+                                ? Icons.group_rounded
+                                : Icons.vaccines_rounded,
+                            color: Colors.orange,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                judul,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  color: Colors.black87,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.calendar_today_rounded,
+                                    size: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    formattedDate,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Icon(
+                                    Icons.location_on_rounded,
+                                    size: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      lokasi,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ArtikelTerbaruSection extends StatelessWidget {
+  final String userId;
+  final String fullName;
+
+  const ArtikelTerbaruSection({
+    super.key,
+    required this.userId,
+    required this.fullName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            spreadRadius: 1,
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Artikel Terbaru",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Edukasi(
+                        userId: userId,
+                        fullName: fullName,
+                        role: 'kader',
+                      ),
+                    ),
+                  );
+                },
+                child: const Text(
+                  "Lihat Semua",
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('edukasi')
+                .orderBy('createdAt', descending: true)
+                .limit(3)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: CircularProgressIndicator(color: Colors.green),
+                  ),
+                );
+              }
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: Text(
+                      "Belum ada artikel edukasi.",
+                      style: TextStyle(color: Colors.grey[500], fontSize: 13),
+                    ),
+                  ),
+                );
+              }
+              var listArtikel = snapshot.data!.docs;
+
+              return ListView.builder(
+                padding: EdgeInsets.zero,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: listArtikel.length,
+                itemBuilder: (context, index) {
+                  var doc = listArtikel[index];
+                  var data = doc.data() as Map<String, dynamic>;
+                  String judul = data['judul'] ?? 'Tanpa Judul';
+                  String imageUrl = data['imageUrl'] ?? '';
+                  Timestamp? createdAt = data['createdAt'];
+                  String tanggal = '-';
+                  if (createdAt != null) {
+                    DateTime dt = createdAt.toDate();
+                    tanggal = "${dt.day}/${dt.month}/${dt.year}";
+                  }
+
+                  return InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              DetailEdukasi(data: data, role: 'kader'),
+                        ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 12.0),
+                      child: Row(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              width: 80,
+                              height: 80,
+                              color: Colors.grey[200],
+                              child: imageUrl.isNotEmpty
+                                  ? Image.network(
+                                      imageUrl,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              const Icon(
+                                                Icons.broken_image,
+                                                color: Colors.grey,
+                                              ),
+                                    )
+                                  : const Icon(Icons.image, color: Colors.grey),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  judul,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    color: Colors.black87,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.calendar_today_rounded,
+                                      size: 14,
+                                      color: Colors.grey[500],
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      tanggal,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[500],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class BerandaKader extends StatelessWidget {
   final String userId;
   final String fullName;
@@ -1074,6 +1481,16 @@ class BerandaKader extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: LiveToddlersSection(fullName: fullName),
+            ),
+            const SizedBox(height: 20),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: JadwalMendatangSection(),
+            ),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: ArtikelTerbaruSection(userId: userId, fullName: fullName),
             ),
             const SizedBox(height: 40),
           ],

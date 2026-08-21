@@ -422,17 +422,6 @@ class QuickMenuAccess extends StatelessWidget {
                 },
               ),
               _buildMenuItem(
-                icon: Icons.calendar_month_rounded,
-                color: Colors.orange,
-                label: "Jadwal\nPosyandu",
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const Jadwal()),
-                  );
-                },
-              ),
-              _buildMenuItem(
                 icon: Icons.menu_book_rounded,
                 color: Colors.purple,
                 label: "Edukasi\nGizi",
@@ -446,6 +435,17 @@ class QuickMenuAccess extends StatelessWidget {
                         role: 'orang-tua',
                       ),
                     ),
+                  );
+                },
+              ),
+              _buildMenuItem(
+                icon: Icons.calendar_month_rounded,
+                color: Colors.orange,
+                label: "Jadwal\nPosyandu",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const Jadwal()),
                   );
                 },
               ),

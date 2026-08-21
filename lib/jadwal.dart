@@ -12,7 +12,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:add_2_calendar/add_2_calendar.dart';
 
 class Jadwal extends StatefulWidget {
-  const Jadwal({super.key});
+  final String role;
+  const Jadwal({super.key, this.role = 'orang-tua'});
 
   @override
   State<Jadwal> createState() => _JadwalState();
@@ -85,8 +86,22 @@ class _JadwalState extends State<Jadwal> {
     DateTime now = DateTime.now();
     DateTime startOfToday = DateTime(now.year, now.month, now.day);
 
+    Color bgColor = const Color(0xFFF1F8E9);
+    List<Color> gradientColors = [const Color(0xFF388E3C), const Color(0xFF66BB6A)];
+    Color indicatorColor = Colors.green;
+
+    if (widget.role == 'kader') {
+      bgColor = Colors.blue.shade50;
+      gradientColors = [Colors.blue.shade700, Colors.blue.shade400];
+      indicatorColor = Colors.blue;
+    } else if (widget.role == 'bidan') {
+      bgColor = Colors.purple.shade50;
+      gradientColors = [Colors.purple.shade700, Colors.purple.shade400];
+      indicatorColor = Colors.purple;
+    }
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F8E9),
+      backgroundColor: bgColor,
       appBar: AppBar(
         title: const Text(
           "Jadwal Mendatang",
@@ -98,9 +113,9 @@ class _JadwalState extends State<Jadwal> {
         ),
         centerTitle: true,
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF388E3C), Color(0xFF66BB6A)],
+              colors: gradientColors,
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -120,8 +135,8 @@ class _JadwalState extends State<Jadwal> {
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.green),
+            return Center(
+              child: CircularProgressIndicator(color: indicatorColor),
             );
           }
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -132,13 +147,13 @@ class _JadwalState extends State<Jadwal> {
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: Colors.green.withValues(alpha: 0.1),
+                      color: indicatorColor.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.event_busy_rounded,
                       size: 64,
-                      color: Colors.green.withValues(alpha: 0.5),
+                      color: indicatorColor.withValues(alpha: 0.5),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -188,8 +203,19 @@ class _JadwalState extends State<Jadwal> {
               ).format(tanggal);
 
               bool isPosyandu = kategori.toLowerCase() == 'posyandu';
-              Color themeColor = isPosyandu ? Colors.green : Colors.orange;
-              Color lightThemeColor = isPosyandu ? Colors.green.shade50 : Colors.orange.shade50;
+              Color themeColor;
+              Color lightThemeColor;
+
+              if (widget.role == 'kader') {
+                themeColor = isPosyandu ? Colors.blue : Colors.orange;
+                lightThemeColor = isPosyandu ? Colors.blue.shade50 : Colors.orange.shade50;
+              } else if (widget.role == 'bidan') {
+                themeColor = isPosyandu ? Colors.purple : Colors.orange;
+                lightThemeColor = isPosyandu ? Colors.purple.shade50 : Colors.orange.shade50;
+              } else {
+                themeColor = isPosyandu ? Colors.green : Colors.orange;
+                lightThemeColor = isPosyandu ? Colors.green.shade50 : Colors.orange.shade50;
+              }
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 24),
