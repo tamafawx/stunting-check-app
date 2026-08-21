@@ -200,7 +200,7 @@ class UserHeaderSection extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text(
-                    'Orang Tua Balita',
+                    'Orang Tua',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 11,
