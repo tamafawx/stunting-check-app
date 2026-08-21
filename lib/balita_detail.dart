@@ -11,6 +11,7 @@ class DetailBalita extends StatefulWidget {
   final Map<String, dynamic> data;
   final String role;
   final String fullName;
+  final int initialTabIndex;
 
   const DetailBalita({
     super.key,
@@ -18,6 +19,7 @@ class DetailBalita extends StatefulWidget {
     required this.data,
     required this.role,
     this.fullName = '',
+    this.initialTabIndex = 0,
   });
 
   @override
@@ -35,7 +37,11 @@ class _DetailBalitaState extends State<DetailBalita>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(
+      initialIndex: widget.initialTabIndex,
+      length: 3,
+      vsync: this,
+    );
     _balitaData = widget.data;
     _listenToBalitaChanges();
   }
