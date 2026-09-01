@@ -267,7 +267,9 @@ class _KelolaBalitaState extends State<KelolaBalita> {
               var filteredBalita = balitaDocs.where((doc) {
                 var data = doc.data() as Map<String, dynamic>;
                 var name = (data['nama'] ?? '').toString().toLowerCase();
-                return name.contains(_searchQuery.toLowerCase());
+                var docId = doc.id.toLowerCase();
+                var query = _searchQuery.toLowerCase();
+                return name.contains(query) || docId.contains(query);
               }).toList();
 
               filteredBalita.sort((a, b) {
@@ -445,7 +447,7 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                               });
                             },
                             decoration: InputDecoration(
-                              hintText: 'Cari nama balita...',
+                              hintText: 'Cari nama atau ID balita...',
                               prefixIcon: const Icon(
                                 Icons.search,
                                 color: Colors.grey,

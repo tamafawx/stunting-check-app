@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'balita_edit.dart';
@@ -716,7 +717,7 @@ class _DetailBalitaState extends State<DetailBalita>
     final String usiaText = _calculateAge(
       _balitaData['tanggalLahir'] ?? widget.data['tanggalLahir'],
     );
-    final String idBalita = "BLT-${widget.docId.substring(0, 5).toUpperCase()}";
+    final String idBalita = widget.docId.toUpperCase();
     final String? fotoUrl = _balitaData['fotoUrl'] ?? widget.data['fotoUrl'];
 
     return Scaffold(
@@ -871,14 +872,35 @@ class _DetailBalitaState extends State<DetailBalita>
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        "ID Balita: $idBalita",
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[400],
-                          fontFamily: 'Courier',
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            idBalita,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[400],
+                              fontFamily: 'Courier',
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          InkWell(
+                            onTap: () {
+                              Clipboard.setData(ClipboardData(text: idBalita));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('ID Balita disalin ke clipboard'),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            },
+                            child: Icon(
+                              Icons.copy_rounded,
+                              size: 16,
+                              color: themeColor,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
