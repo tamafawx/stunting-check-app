@@ -41,6 +41,7 @@ class _TambahPengumumanState extends State<TambahPengumuman> {
         await FirebaseFirestore.instance.collection('pengumuman').add({
           'judul': _judulController.text.trim(),
           'konten': _kontenController.text.trim(),
+          'authorId': widget.userId,
           'authorName': widget.fullName,
           'createdAt': FieldValue.serverTimestamp(),
           'readBy': [],
