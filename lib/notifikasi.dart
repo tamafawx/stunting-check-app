@@ -84,7 +84,7 @@ class Notifikasi extends StatelessWidget {
     Color themeColor = _getMainThemeColor(role);
     String judul = data['judul'] ?? 'Pengumuman';
     String konten = data['konten'] ?? 'Tidak ada detail.';
-    String penulis = data['penulis'] ?? 'Admin Posyandu';
+    String penulis = data['authorName'] ?? 'Admin Posyandu';
     Timestamp? createdAt = data['createdAt'];
     String tanggal = '-';
 
