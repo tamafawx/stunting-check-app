@@ -478,7 +478,9 @@ class QuickMenuAccessBidan extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const Jadwal(role: 'bidan')),
+                    MaterialPageRoute(
+                      builder: (context) => const Jadwal(role: 'bidan'),
+                    ),
                   );
                 },
               ),
@@ -492,10 +494,10 @@ class QuickMenuAccessBidan extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (BuildContext context) =>
                           KonsultasiBerandaPercakapan(
-                        userId: userId,
-                        fullName: fullName,
-                        role: 'bidan',
-                      ),
+                            userId: userId,
+                            fullName: fullName,
+                            role: 'bidan',
+                          ),
                     ),
                   );
                 },
@@ -907,7 +909,7 @@ class LiveToddlersSectionBidan extends StatelessWidget {
             stream: FirebaseFirestore.instance
                 .collection('balita')
                 .where('isHidden', isEqualTo: false)
-                .limit(5)
+                .limit(3)
                 .snapshots(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -1100,7 +1102,9 @@ class JadwalMendatangSection extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const Jadwal(role: 'bidan')),
+                    MaterialPageRoute(
+                      builder: (context) => const Jadwal(role: 'bidan'),
+                    ),
                   );
                 },
                 child: const Text(
