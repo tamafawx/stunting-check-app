@@ -19,9 +19,42 @@ class Register extends StatefulWidget {
 class _RegisterState extends State<Register> {
   bool _obscurePassword = true;
   bool _isLoading = false;
+  int _passwordStrength = 0;
+  String _passwordMessage = '';
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  void _checkPasswordStrength(String password) {
+    if (password.isEmpty) {
+      setState(() {
+        _passwordStrength = 0;
+        _passwordMessage = '';
+      });
+      return;
+    }
+
+    bool hasUppercase = password.contains(RegExp(r'[A-Z]'));
+    bool hasDigits = password.contains(RegExp(r'[0-9]'));
+    bool hasSpecialCharacters = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+
+    if (password.length < 8) {
+      setState(() {
+        _passwordStrength = 1;
+        _passwordMessage = 'Password terlalu pendek, minimal 8 karakter.';
+      });
+    } else if (!hasUppercase || !hasDigits || !hasSpecialCharacters) {
+      setState(() {
+        _passwordStrength = 2;
+        _passwordMessage = 'Kurang aman: butuh 1 kapital, 1 angka, dan 1 simbol.';
+      });
+    } else {
+      setState(() {
+        _passwordStrength = 3;
+        _passwordMessage = 'Password kuat dan aman.';
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -43,6 +76,13 @@ class _RegisterState extends State<Register> {
       return;
     }
 
+    if (password.length < 8) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password terlalu pendek, minimal 8-12.')),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
@@ -56,7 +96,10 @@ class _RegisterState extends State<Register> {
       if (querySnapshot.docs.isNotEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Email sudah terdaftar.')),
+            const SnackBar(
+              content: Text('Email ini sudah terdaftar dan silahkan login.'),
+              backgroundColor: Colors.red,
+            ),
           );
           setState(() {
             _isLoading = false;
@@ -75,7 +118,7 @@ class _RegisterState extends State<Register> {
         'password': hashedPassword,
         'role': 'orang-tua',
         'createdAt': FieldValue.serverTimestamp(),
-        'status': 'aktif',
+        'isActive': true,
       });
 
       if (mounted) {
@@ -187,6 +230,7 @@ class _RegisterState extends State<Register> {
               TextFormField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
+                onChanged: _checkPasswordStrength,
                 decoration: InputDecoration(
                   prefixIcon: const Icon(
                     Icons.lock_outline_rounded,
@@ -217,6 +261,62 @@ class _RegisterState extends State<Register> {
                   fillColor: Colors.white,
                 ),
               ),
+              const SizedBox(height: 8),
+              if (_passwordMessage.isNotEmpty)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 6,
+                            margin: const EdgeInsets.only(right: 4),
+                            decoration: BoxDecoration(
+                              color: _passwordStrength == 1
+                                  ? Colors.red
+                                  : (_passwordStrength == 2
+                                      ? Colors.orange
+                                      : (_passwordStrength == 3 ? Colors.green : Colors.grey[300])),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Container(
+                            height: 6,
+                            margin: const EdgeInsets.only(right: 4),
+                            decoration: BoxDecoration(
+                              color: _passwordStrength == 2
+                                  ? Colors.orange
+                                  : (_passwordStrength == 3 ? Colors.green : Colors.grey[300]),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Container(
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: _passwordStrength == 3 ? Colors.green : Colors.grey[300],
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _passwordMessage,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _passwordStrength == 1
+                            ? Colors.red
+                            : (_passwordStrength == 2 ? Colors.orange : Colors.green),
+                      ),
+                    ),
+                  ],
+                ),
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: _isLoading ? null : _registerAccount,

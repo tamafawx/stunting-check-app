@@ -67,9 +67,10 @@ class _LoginState extends State<Login> {
         String userId = userDoc.id;
         String fullName = userData['fullName'] ?? 'Pengguna';
         String role = userData['role'] ?? '';
-        String status = userData['status'] ?? 'aktif';
+        bool isActive =
+            userData['isActive'] ?? (userData['status'] != 'nonaktif');
 
-        if (status == 'nonaktif') {
+        if (!isActive) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
