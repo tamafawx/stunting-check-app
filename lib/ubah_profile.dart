@@ -294,8 +294,10 @@ class _UbahProfilState extends State<UbahProfile> {
           newProfileUrl = await _uploadImage();
         }
 
+        String newFullName = _namaController.text.trim();
+
         Map<String, dynamic> updateData = {
-          'fullName': _namaController.text.trim(),
+          'fullName': newFullName,
           'email': _emailController.text.trim(),
           'profileUrl': newProfileUrl,
           'updatedAt': FieldValue.serverTimestamp(),
@@ -311,6 +313,43 @@ class _UbahProfilState extends State<UbahProfile> {
             .collection('users')
             .doc(widget.userId)
             .update(updateData);
+
+        try {
+          final balitaQuery = await FirebaseFirestore.instance
+              .collection('balita')
+              .where('orangTuaIds', arrayContains: widget.userId)
+              .get();
+
+          if (balitaQuery.docs.isNotEmpty) {
+            WriteBatch batch = FirebaseFirestore.instance.batch();
+
+            for (var doc in balitaQuery.docs) {
+              Map<String, dynamic> data = doc.data();
+              List<dynamic> ortuIds = List.from(data['orangTuaIds'] ?? []);
+              List<dynamic> ortuNames = List.from(data['orangTuaNames'] ?? []);
+
+              int index = ortuIds.indexOf(widget.userId);
+              if (index != -1) {
+                if (index >= ortuNames.length) {
+                  ortuNames.length = index + 1;
+                }
+                ortuNames[index] = newFullName;
+
+                String joinedNames = ortuNames
+                    .where((n) => n != null && n.toString().trim().isNotEmpty)
+                    .join(', ');
+
+                batch.update(doc.reference, {
+                  'orangTuaNames': ortuNames,
+                  'namaOrangTua': joinedNames,
+                });
+              }
+            }
+            await batch.commit();
+          }
+        } catch (e) {
+          // Error Message none
+        }
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
