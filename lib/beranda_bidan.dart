@@ -13,6 +13,7 @@ import 'edukasi.dart';
 import 'edukasi_detail.dart';
 import 'balita_kelola.dart';
 import 'balita_detail.dart';
+import 'pemeriksaan_validasi.dart';
 import 'jadwal.dart';
 import 'notifikasi.dart';
 
@@ -127,90 +128,110 @@ class UserHeaderSection extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          StreamBuilder<DocumentSnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('users')
-                .doc(userId)
-                .snapshots(),
-            builder: (context, snapshot) {
-              String? profileUrl;
-              if (snapshot.hasData && snapshot.data!.exists) {
-                var data = snapshot.data!.data() as Map<String, dynamic>;
-                profileUrl = data['profileUrl'];
-              }
+          Expanded(
+            child: StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(userId)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                String? profileUrl;
+                String displayFullName = fullName.length > 16
+                    ? '${fullName.substring(0, 16)}...'
+                    : fullName;
+                if (snapshot.hasData && snapshot.data!.exists) {
+                  var data = snapshot.data!.data() as Map<String, dynamic>;
+                  profileUrl = data['profileUrl'];
+                  if (data['fullName'] != null) {
+                    String fetchedName = data['fullName'];
+                    displayFullName = fetchedName.length > 16
+                        ? '${fetchedName.substring(0, 16)}...'
+                        : fetchedName;
+                  }
+                }
 
-              return Container(
-                padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
+                return Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: CircleAvatar(
+                        radius: 32,
+                        backgroundColor: Colors.purpleAccent.shade100,
+                        backgroundImage:
+                            profileUrl != null && profileUrl.isNotEmpty
+                            ? NetworkImage(profileUrl)
+                            : null,
+                        child: profileUrl == null || profileUrl.isEmpty
+                            ? const Icon(
+                                Icons.person,
+                                color: Colors.white,
+                                size: 36,
+                              )
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Selamat Datang,',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.9),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            displayFullName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Text(
+                              'Bidan',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
-                ),
-                child: CircleAvatar(
-                  radius: 32,
-                  backgroundColor: Colors.purpleAccent.shade100,
-                  backgroundImage: profileUrl != null && profileUrl.isNotEmpty
-                      ? NetworkImage(profileUrl)
-                      : null,
-                  child: profileUrl == null || profileUrl.isEmpty
-                      ? const Icon(Icons.person, color: Colors.white, size: 36)
-                      : null,
-                ),
-              );
-            },
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Selamat Datang,',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  fullName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Bidan',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
+                );
+              },
             ),
           ),
           _buildNotification(context),
@@ -450,6 +471,20 @@ class QuickMenuAccessBidan extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (context) =>
                           KelolaBalita(role: 'bidan', fullName: fullName),
+                    ),
+                  );
+                },
+              ),
+              _buildMenuItem(
+                icon: Icons.check_circle_outline,
+                color: Colors.green,
+                label: "Validasi Pemeriksaan",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          const PemeriksaanValidasi(role: 'bidan'),
                     ),
                   );
                 },

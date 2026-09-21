@@ -55,7 +55,7 @@ class ProfileHeader extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               Container(
-                height: 120,
+                height: 64,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   gradient: backgroundGradient,
@@ -73,7 +73,7 @@ class ProfileHeader extends StatelessWidget {
                 ),
               ),
               Positioned(
-                top: 70,
+                top: 10,
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
@@ -294,6 +294,10 @@ class Profile extends StatelessWidget {
           profileUrl = data['profileUrl'] ?? '';
         }
 
+        if (displayName.length > 16) {
+          displayName = '${displayName.substring(0, 16)}...';
+        }
+
         Color mainThemeColor = _getMainThemeColor(displayRole);
         LinearGradient bgGradient = _getRoleGradient(displayRole);
 
@@ -315,7 +319,7 @@ class Profile extends StatelessWidget {
             elevation: 0,
           ),
           body: SingleChildScrollView(
-            physics: const ClampingScrollPhysics(),
+            physics: NeverScrollableScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

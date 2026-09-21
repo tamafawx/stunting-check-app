@@ -304,7 +304,16 @@ class _UbahProfilState extends State<UbahProfile> {
         };
 
         if (_passwordController.text.isNotEmpty) {
-          var bytes = utf8.encode(_passwordController.text);
+          String pw = _passwordController.text;
+          if (pw.length < 8) {
+            setState(() => _isLoading = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Password baru terlalu pendek, minimal 8 karakter.')),
+            );
+            return;
+          }
+
+          var bytes = utf8.encode(pw);
           var digest = sha256.convert(bytes);
           updateData['password'] = digest.toString();
         }
@@ -585,13 +594,24 @@ class _UbahProfilState extends State<UbahProfile> {
                                     },
                                   ),
                                   validator: (value) {
-                                    if (value != null &&
-                                        value.isNotEmpty &&
-                                        value.length < 6) {
-                                      return 'Password minimal 6 karakter';
+                                    if (value != null && value.isNotEmpty) {
+                                      if (value.length < 8) {
+                                        return 'Password minimal 8 karakter';
+                                      }
                                     }
                                     return null;
                                   },
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 72, right: 16, bottom: 16),
+                                  child: Text(
+                                    '* Opsional. Minimal 8 karakter. (Disarankan menggunakan huruf kapital, angka, dan simbol agar lebih aman).',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
@@ -659,6 +679,7 @@ class _UbahProfilState extends State<UbahProfile> {
     String? Function(String?)? validator,
     bool obscureText = false,
     Widget? suffixIcon,
+    void Function(String)? onChanged,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -679,6 +700,7 @@ class _UbahProfilState extends State<UbahProfile> {
               controller: controller,
               keyboardType: keyboardType,
               obscureText: obscureText,
+              onChanged: onChanged,
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
