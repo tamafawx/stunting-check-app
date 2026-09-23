@@ -193,6 +193,7 @@ class _PilihBalitaPemeriksaanState extends State<PilihBalitaPemeriksaan> {
                     String jenisKelamin = data['jenisKelamin'] ?? 'Laki-laki';
                     String usia = _calculateAge(data['tanggalLahir']);
                     String namaOrtu = data['namaOrangTua'] ?? '-';
+                    String? fotoUrl = data['fotoUrl'];
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -221,19 +222,27 @@ class _PilihBalitaPemeriksaanState extends State<PilihBalitaPemeriksaan> {
                             'jenisKelamin': jenisKelamin,
                             'tanggalLahir': data['tanggalLahir'],
                             'usia': usia,
+                            'namaOrtu': namaOrtu,
+                            'fotoUrl': fotoUrl,
                           });
                         },
                         leading: CircleAvatar(
-                          radius: 24,
+                          radius: 28, // Perbesar dari 24
                           backgroundColor: jenisKelamin == 'Laki-laki'
                               ? Colors.blue.withValues(alpha: 0.15)
                               : Colors.pink.withValues(alpha: 0.15),
-                          child: Icon(
-                            Icons.child_care,
-                            color: jenisKelamin == 'Laki-laki'
-                                ? Colors.blue
-                                : Colors.pink,
-                          ),
+                          backgroundImage: fotoUrl != null && fotoUrl.isNotEmpty
+                              ? NetworkImage(fotoUrl)
+                              : null,
+                          child: (fotoUrl == null || fotoUrl.isEmpty)
+                              ? Icon(
+                                  Icons.child_care,
+                                  size: 28,
+                                  color: jenisKelamin == 'Laki-laki'
+                                      ? Colors.blue
+                                      : Colors.pink,
+                                )
+                              : null,
                         ),
                         title: Text(
                           nama,
