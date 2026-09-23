@@ -20,6 +20,7 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
   int _documentLimit = 10;
   final ScrollController _scrollController = ScrollController();
   List<DocumentSnapshot>? _cachedDocs;
+  final Map<String, Future<DocumentSnapshot>> _balitaFutures = {};
 
   @override
   void initState() {
@@ -52,7 +53,9 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
 
   String _formatTanggal(DateTime date) {
     final now = DateTime.now();
-    if (date.year == now.year && date.month == now.month && date.day == now.day) {
+    if (date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day) {
       return "Hari Ini";
     }
     return "${date.day} ${_namaBulan[date.month]} ${date.year}";
@@ -95,19 +98,22 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
   }
 
   Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'normal':
-      case 'aman':
-        return Colors.green;
-      case 'risiko tinggi':
-      case 'sangat pendek':
-        return Colors.redAccent;
-      case 'risiko sedang':
-      case 'pendek':
-        return Colors.orange;
-      default:
-        return _themeColor;
+    String s = status.toLowerCase();
+    if (s.contains('sangat') ||
+        s.contains('buruk') ||
+        s.contains('risiko tinggi')) {
+      return Colors.redAccent;
+    } else if (s.contains('normal') || s.contains('aman')) {
+      return Colors.green;
+    } else if (s.contains('pendek') ||
+        s.contains('kurang') ||
+        s.contains('sefali') ||
+        s.contains('tinggi') ||
+        s.contains('lebih') ||
+        s.contains('risiko rendah')) {
+      return Colors.orange;
     }
+    return _themeColor;
   }
 
   Future<void> _unduhLaporanHarian(DateTime targetDate) async {
@@ -328,36 +334,36 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
-                        .collection('pemeriksaan')
-                        .where(
-                          'tanggal',
-                          isGreaterThanOrEqualTo: Timestamp.fromDate(
-                            DateTime(
-                              _selectedDate.year,
-                              _selectedDate.month,
-                              _selectedDate.day,
-                              0,
-                              0,
-                              0,
-                            ),
-                          ),
-                        )
-                        .where(
-                          'tanggal',
-                          isLessThanOrEqualTo: Timestamp.fromDate(
-                            DateTime(
-                              _selectedDate.year,
-                              _selectedDate.month,
-                              _selectedDate.day,
-                              23,
-                              59,
-                              59,
-                            ),
-                          ),
-                        )
-                        .orderBy('tanggal', descending: true)
-                        .limit(_documentLimit)
-                        .snapshots(),
+                  .collection('pemeriksaan')
+                  .where(
+                    'tanggal',
+                    isGreaterThanOrEqualTo: Timestamp.fromDate(
+                      DateTime(
+                        _selectedDate.year,
+                        _selectedDate.month,
+                        _selectedDate.day,
+                        0,
+                        0,
+                        0,
+                      ),
+                    ),
+                  )
+                  .where(
+                    'tanggal',
+                    isLessThanOrEqualTo: Timestamp.fromDate(
+                      DateTime(
+                        _selectedDate.year,
+                        _selectedDate.month,
+                        _selectedDate.day,
+                        23,
+                        59,
+                        59,
+                      ),
+                    ),
+                  )
+                  .orderBy('tanggal', descending: true)
+                  .limit(_documentLimit)
+                  .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   _cachedDocs = snapshot.data!.docs;
@@ -435,10 +441,11 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
                     String pemeriksaanId = filteredDocs[index].id;
                     String namaAnak =
                         data['namaBalita'] ?? 'Nama Tidak Diketahui';
-                    String status = data['statusStunting'] ?? 'Normal';
+                    String status = data['statusBalita'] ?? 'Normal';
                     Timestamp timestamp = data['tanggal'] ?? Timestamp.now();
                     DateTime waktu = timestamp.toDate();
-                    String infoWaktu = "${waktu.hour.toString().padLeft(2, '0')}:${waktu.minute.toString().padLeft(2, '0')}";
+                    String infoWaktu =
+                        "${waktu.hour.toString().padLeft(2, '0')}:${waktu.minute.toString().padLeft(2, '0')}";
 
                     String strBb = data['beratBadan'] != null
                         ? "${data['beratBadan']} kg"
@@ -452,6 +459,11 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
                     String strLila = data['lingkarLengan'] != null
                         ? "${data['lingkarLengan']} cm"
                         : "-";
+
+                    _balitaFutures[balitaId] ??= FirebaseFirestore.instance
+                        .collection('balita')
+                        .doc(balitaId)
+                        .get();
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 16),
@@ -473,10 +485,7 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
                           Row(
                             children: [
                               FutureBuilder<DocumentSnapshot>(
-                                future: FirebaseFirestore.instance
-                                    .collection('balita')
-                                    .doc(balitaId)
-                                    .get(),
+                                future: _balitaFutures[balitaId],
                                 builder: (context, balitaSnapshot) {
                                   String? fotoUrl;
                                   if (balitaSnapshot.hasData &&
@@ -579,19 +588,29 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
                           const SizedBox(height: 12),
                           const Divider(height: 1, color: Color(0xFFEEEEEE)),
                           const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildDataCol("Berat Badan", strBb),
-                              ),
-                              Expanded(child: _buildDataCol("Tinggi", strTb)),
-                              Expanded(
-                                child: _buildDataCol("L. Kepala", strLk),
-                              ),
-                              Expanded(
-                                child: _buildDataCol("L. Lengan", strLila),
-                              ),
-                            ],
+                          _buildPemeriksaanRow(
+                            Icons.monitor_weight_outlined,
+                            'Berat Badan',
+                            strBb,
+                            status: data['statusBeratBadan'],
+                          ),
+                          _buildPemeriksaanRow(
+                            Icons.height,
+                            'Tinggi Badan',
+                            strTb,
+                            status: data['statusTinggiBadan'],
+                          ),
+                          _buildPemeriksaanRow(
+                            Icons.face_retouching_natural,
+                            'Lingkar Kepala',
+                            strLk,
+                            status: data['statusLingkarKepala'],
+                          ),
+                          _buildPemeriksaanRow(
+                            Icons.accessibility_new,
+                            'Lingkar Lengan',
+                            strLila,
+                            status: data['statusLingkarLengan'],
                           ),
                         ],
                       ),
@@ -606,28 +625,116 @@ class _RiwayatPemeriksaanState extends State<RiwayatPemeriksaan> {
     );
   }
 
-  Widget _buildDataCol(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 10,
-            color: Colors.grey,
-            fontWeight: FontWeight.w600,
+  // Widget _buildDataCol(String label, String value) {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       Text(
+  //         label,
+  //         style: const TextStyle(
+  //           fontSize: 10,
+  //           color: Colors.grey,
+  //           fontWeight: FontWeight.w600,
+  //         ),
+  //       ),
+  //       const SizedBox(height: 4),
+  //       Text(
+  //         value,
+  //         style: const TextStyle(
+  //           fontSize: 13,
+  //           color: Color(0xFF2C3E50),
+  //           fontWeight: FontWeight.bold,
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
+
+  Widget _buildPemeriksaanRow(
+    IconData icon,
+    String label,
+    String value, {
+    bool isEnabled = true,
+    String? status,
+    bool showTooltip = true,
+  }) {
+    Color activeColor = (status != null && status.isNotEmpty)
+        ? _getStatusColor(status)
+        : _themeColor;
+
+    Color iconBgColor = isEnabled
+        ? activeColor.withValues(alpha: 0.1)
+        : Colors.grey.withValues(alpha: 0.1);
+    Color iconColor = isEnabled ? activeColor : Colors.grey;
+    Color labelColor = isEnabled ? Colors.grey[700]! : Colors.grey[500]!;
+    Color valueColor = isEnabled ? Colors.black87 : Colors.grey[400]!;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: iconBgColor,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(icon, color: iconColor, size: 16),
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 13,
-            color: Color(0xFF2C3E50),
-            fontWeight: FontWeight.bold,
+          const SizedBox(width: 10),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: labelColor,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ),
-      ],
+          const SizedBox(width: 8),
+          Expanded(
+            child: Wrap(
+              alignment: WrapAlignment.end,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 6,
+              children: [
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: valueColor,
+                  ),
+                ),
+                if (showTooltip && status != null && status.isNotEmpty)
+                  Tooltip(
+                    message: status,
+                    triggerMode: TooltipTriggerMode.tap,
+                    showDuration: const Duration(seconds: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: _getStatusColor(status).withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    textStyle: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    child: Icon(
+                      Icons.help_outline,
+                      size: 14,
+                      color: _getStatusColor(status),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -768,7 +875,7 @@ class _PemeriksaanCalendarDialogState extends State<PemeriksaanCalendarDialog> {
                   ),
                   defaultTextStyle: const TextStyle(fontSize: 14),
                   weekendTextStyle: const TextStyle(
-                    fontSize: 14, 
+                    fontSize: 14,
                     color: Colors.redAccent,
                   ),
                 ),
@@ -776,21 +883,27 @@ class _PemeriksaanCalendarDialogState extends State<PemeriksaanCalendarDialog> {
                   formatButtonVisible: false,
                   titleCentered: true,
                   titleTextStyle: TextStyle(
-                    fontSize: 16, 
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
-                  leftChevronIcon: Icon(Icons.chevron_left, color: Colors.black54),
-                  rightChevronIcon: Icon(Icons.chevron_right, color: Colors.black54),
+                  leftChevronIcon: Icon(
+                    Icons.chevron_left,
+                    color: Colors.black54,
+                  ),
+                  rightChevronIcon: Icon(
+                    Icons.chevron_right,
+                    color: Colors.black54,
+                  ),
                 ),
                 daysOfWeekStyle: const DaysOfWeekStyle(
                   weekdayStyle: TextStyle(
-                    fontSize: 12, 
-                    fontWeight: FontWeight.w600, 
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                     color: Colors.black54,
                   ),
                   weekendStyle: TextStyle(
-                    fontSize: 12, 
-                    fontWeight: FontWeight.w600, 
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                     color: Colors.redAccent,
                   ),
                 ),
@@ -804,7 +917,10 @@ class _PemeriksaanCalendarDialogState extends State<PemeriksaanCalendarDialog> {
                 },
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.grey[700],
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
