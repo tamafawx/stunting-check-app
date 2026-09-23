@@ -629,9 +629,19 @@ class StuntingPieChartSection extends StatelessWidget {
                 );
               }
 
+              DateTime startOfMonth = DateTime(
+                DateTime.now().year,
+                DateTime.now().month,
+                1,
+              );
+
               return StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('pemeriksaan')
+                    .where(
+                      'tanggal',
+                      isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth),
+                    )
                     .snapshots(),
                 builder: (context, pemeriksaanSnapshot) {
                   if (pemeriksaanSnapshot.connectionState ==
@@ -657,8 +667,7 @@ class StuntingPieChartSection extends StatelessWidget {
                       if (!latestDateMap.containsKey(bId) ||
                           date.isAfter(latestDateMap[bId]!)) {
                         latestDateMap[bId] = date;
-                        latestStatusMap[bId] =
-                            data['statusStunting'] ?? 'Belum Diukur';
+                        latestStatusMap[bId] = data['statusBalita'] ?? 'Aman';
                       }
                     }
                   }
@@ -930,7 +939,6 @@ class LiveToddlersSection extends StatelessWidget {
             stream: FirebaseFirestore.instance
                 .collection('balita')
                 .where('isHidden', isEqualTo: false)
-                .limit(3)
                 .snapshots(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -964,14 +972,27 @@ class LiveToddlersSection extends StatelessWidget {
                 );
               }
 
-              var listBalita = snapshot.data!.docs;
+              var listBalita = snapshot.data!.docs.toList();
+              listBalita.sort((a, b) {
+                var dataA = a.data() as Map<String, dynamic>;
+                var dataB = b.data() as Map<String, dynamic>;
+                Timestamp? tA = dataA['createdAt'];
+                Timestamp? tB = dataB['createdAt'];
+                if (tA == null && tB == null) return 0;
+                if (tA == null) return 1;
+                if (tB == null) return -1;
+                return tB.compareTo(tA);
+              });
+
+              var topBalita = listBalita.take(3).toList();
+
               return ListView.builder(
                 padding: EdgeInsets.zero,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: listBalita.length,
+                itemCount: topBalita.length,
                 itemBuilder: (context, index) {
-                  var doc = listBalita[index];
+                  var doc = topBalita[index];
                   var data = doc.data() as Map<String, dynamic>;
 
                   String nama = data['nama'] ?? 'Tanpa Nama';
