@@ -279,7 +279,18 @@ class _EditBalitaScreenState extends State<EditBalitaScreen> {
     }
   }
 
+  String _capitalizeWords(String input) {
+    if (input.isEmpty) return input;
+    return input.split(' ').map((word) {
+      if (word.isEmpty) return word;
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
+  }
+
   Future<void> _updateData() async {
+    // Paksa perbarui nilai di controller agar kapital
+    _namaController.text = _capitalizeWords(_namaController.text.trim());
+
     if (_formKey.currentState!.validate()) {
       if (_tanggalLahir == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -319,7 +330,7 @@ class _EditBalitaScreenState extends State<EditBalitaScreen> {
 
         Map<String, dynamic> updateData = {
           'nama': _namaController.text.trim(),
-          'jenisKelamin': _jenisKelamin,
+          'jenisKelamin': _jenisKelamin == "Laki-laki" ? "male" : "female",
           'tanggalLahir': Timestamp.fromDate(_tanggalLahir!),
           'namaOrangTua': joinedNames,
           'orangTuaIds': ortuIds,
@@ -337,6 +348,23 @@ class _EditBalitaScreenState extends State<EditBalitaScreen> {
             .collection('balita')
             .doc(widget.docId)
             .update(updateData);
+
+        // Update namaBalita di koleksi pemeriksaan jika nama berubah
+        if (_namaController.text.trim() != widget.data['nama']) {
+          String newName = _namaController.text.trim();
+          QuerySnapshot pemeriksaanSnapshot = await FirebaseFirestore.instance
+              .collection('pemeriksaan')
+              .where('balitaId', isEqualTo: widget.docId)
+              .get();
+
+          if (pemeriksaanSnapshot.docs.isNotEmpty) {
+            WriteBatch batch = FirebaseFirestore.instance.batch();
+            for (var doc in pemeriksaanSnapshot.docs) {
+              batch.update(doc.reference, {'namaBalita': newName});
+            }
+            await batch.commit();
+          }
+        }
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -536,6 +564,7 @@ class _EditBalitaScreenState extends State<EditBalitaScreen> {
                                 const SizedBox(height: 8),
                                 TextFormField(
                                   controller: _namaController,
+                                  textCapitalization: TextCapitalization.words,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -560,7 +589,9 @@ class _EditBalitaScreenState extends State<EditBalitaScreen> {
                                 ),
                                 const SizedBox(height: 8),
                                 DropdownButtonFormField<String>(
-                                  initialValue: _jenisKelamin,
+                                  initialValue: _jenisKelamin == "male"
+                                      ? "Laki-laki"
+                                      : "Perempuan",
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
                                     color: Colors.black87,

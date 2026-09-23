@@ -237,7 +237,14 @@ class _BalitaState extends State<Balita> {
     final fotoUrl = data['fotoUrl'];
     final idBalita = doc.id;
     final usia = _calculateAge(data['tanggalLahir']);
-    final jenisKelamin = data['jenisKelamin'] ?? '-';
+    final String jenisKelaminRaw =
+        data['jenisKelamin']?.toString().toLowerCase() ?? '-';
+    final String jenisKelamin =
+        (jenisKelaminRaw == 'male' || jenisKelaminRaw == 'laki-laki')
+        ? 'Laki-laki'
+        : (jenisKelaminRaw == 'female' || jenisKelaminRaw == 'perempuan')
+        ? 'Perempuan'
+        : '-';
 
     Color jkColor = jenisKelamin == 'Laki-laki'
         ? Colors.lightBlue
@@ -339,12 +346,19 @@ class _BalitaState extends State<Balita> {
     final docId = document.id;
 
     final nama = data['nama'] ?? 'Tanpa Nama';
-    final jenisKelamin = data['jenisKelamin'] ?? '-';
+    final String jenisKelaminRaw =
+        data['jenisKelamin']?.toString().toLowerCase() ?? '-';
+    final String jenisKelamin =
+        (jenisKelaminRaw == 'male' || jenisKelaminRaw == 'laki-laki')
+        ? 'Laki-laki'
+        : (jenisKelaminRaw == 'female' || jenisKelaminRaw == 'perempuan')
+        ? 'Perempuan'
+        : '-';
     final usia = _calculateAge(data['tanggalLahir']);
     final String? fotoUrl = data['fotoUrl'];
 
     Map<String, dynamic>? latestPemeriksaan = latestPemeriksaanMap[docId];
-    String statusRaw = latestPemeriksaan?['statusStunting'] ?? 'Belum Diukur';
+    String statusRaw = latestPemeriksaan?['statusBalita'] ?? 'Belum Diukur';
 
     final bb = latestPemeriksaan?['beratBadan'];
     final tb = latestPemeriksaan?['tinggiBadan'];
@@ -355,20 +369,19 @@ class _BalitaState extends State<Balita> {
     Color statusTextColor = Colors.grey.shade600;
     IconData statusIcon = Icons.help_outline_rounded;
 
-    if (statusRaw.toLowerCase().contains('tinggi') ||
-        statusRaw.toLowerCase().contains('sangat pendek')) {
-      statusTampil = "Risiko Tinggi";
+    String statusLower = statusRaw.toLowerCase();
+    if (statusLower.contains('tinggi') ||
+        statusLower.contains('sangat pendek')) {
       statusBgColor = Colors.red.shade50;
       statusTextColor = Colors.red;
       statusIcon = Icons.warning_amber_rounded;
-    } else if (statusRaw.toLowerCase().contains('sedang') ||
-        statusRaw.toLowerCase().contains('pendek')) {
-      statusTampil = "Risiko Rendah";
+    } else if (statusLower.contains('sedang') ||
+        statusLower.contains('pendek') ||
+        statusLower.contains('rendah')) {
       statusBgColor = Colors.orange.shade50;
       statusTextColor = Colors.orange;
-      statusIcon = Icons.info_outline_rounded;
-    } else if (statusRaw.toLowerCase() != 'belum diukur') {
-      statusTampil = "Aman";
+      statusIcon = Icons.warning_amber_rounded;
+    } else if (statusLower.contains('aman') || statusLower.contains('normal')) {
       statusBgColor = Colors.green.shade50;
       statusTextColor = Colors.green;
       statusIcon = Icons.check_circle_outline_rounded;
@@ -613,7 +626,10 @@ class _BalitaState extends State<Balita> {
     );
   }
 
-  Widget _buildChartCard(String balitaId, List<DocumentSnapshot> allPemeriksaanDocs) {
+  Widget _buildChartCard(
+    String balitaId,
+    List<DocumentSnapshot> allPemeriksaanDocs,
+  ) {
     var docs = allPemeriksaanDocs.where((doc) {
       var data = doc.data() as Map<String, dynamic>;
       return data['balitaId'] == balitaId;
@@ -713,7 +729,10 @@ class _BalitaState extends State<Balita> {
                       interval: 50,
                       reservedSize: 32,
                       getTitlesWidget: (value, meta) {
-                        if (value == 0 || value == 50 || value == 100 || value == 150) {
+                        if (value == 0 ||
+                            value == 50 ||
+                            value == 100 ||
+                            value == 150) {
                           return Text(
                             value.toInt().toString(),
                             style: const TextStyle(
@@ -747,10 +766,7 @@ class _BalitaState extends State<Balita> {
                 ),
                 borderData: FlBorderData(
                   show: true,
-                  border: Border.all(
-                    color: Colors.grey.shade300,
-                    width: 1,
-                  ),
+                  border: Border.all(color: Colors.grey.shade300, width: 1),
                 ),
                 lineBarsData: [
                   LineChartBarData(
@@ -810,7 +826,11 @@ class _BalitaState extends State<Balita> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
         const SizedBox(width: 4),
         Text(text, style: const TextStyle(fontSize: 10, color: Colors.black87)),
       ],
@@ -830,7 +850,7 @@ class _BalitaState extends State<Balita> {
       "September",
       "Oktober",
       "November",
-      "Desember"
+      "Desember",
     ];
     return months[month - 1];
   }
@@ -891,21 +911,22 @@ class _BalitaState extends State<Balita> {
             String formattedDate =
                 "${dt.day.toString().padLeft(2, '0')} ${_getMonthName(dt.month)} ${dt.year}";
 
-            String statusRiwayat = doc['statusStunting'] ?? "Memproses...";
+            String statusRiwayat = doc['statusBalita'] ?? "Memproses...";
             Color bgStatusColor = Colors.grey.shade100;
             Color textStatusColor = Colors.grey.shade600;
 
-            if (statusRiwayat.toLowerCase().contains("tinggi") ||
-                statusRiwayat.toLowerCase().contains("sangat pendek")) {
+            String statusLower = statusRiwayat.toLowerCase();
+            if (statusLower.contains("tinggi") ||
+                statusLower.contains("sangat pendek")) {
               bgStatusColor = Colors.red.shade50;
               textStatusColor = Colors.red;
-            } else if (statusRiwayat.toLowerCase().contains("sedang") ||
-                statusRiwayat.toLowerCase().contains("pendek") ||
-                statusRiwayat.toLowerCase().contains("rendah")) {
+            } else if (statusLower.contains("sedang") ||
+                statusLower.contains("pendek") ||
+                statusLower.contains("rendah")) {
               bgStatusColor = Colors.orange.shade50;
               textStatusColor = Colors.orange;
-            } else if (statusRiwayat.toLowerCase().contains("aman") ||
-                statusRiwayat.toLowerCase().contains("normal")) {
+            } else if (statusLower.contains("aman") ||
+                statusLower.contains("normal")) {
               bgStatusColor = Colors.green.shade50;
               textStatusColor = Colors.green;
             }
@@ -959,31 +980,50 @@ class _BalitaState extends State<Balita> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildHistoryMetric(
-                        "BB",
-                        "${doc['beratBadan'] ?? '-'} kg",
-                      ),
-                      _buildHistoryMetric(
-                        "TB",
-                        "${doc['tinggiBadan'] ?? '-'} cm",
-                      ),
-                      _buildHistoryMetric(
-                        "LK",
-                        "${doc['lingkarKepala'] ?? '-'} cm",
-                      ),
-                      _buildHistoryMetric(
-                        "LILA",
-                        "${doc['lingkarLengan'] ?? '-'} cm",
-                      ),
-                    ],
+                  _buildMetadataRow('ID Pemeriksaan', docSnapshot.id),
+                  _buildMetadataRow(
+                    'Pemeriksaan Ke',
+                    (docs.length - docs.indexOf(docSnapshot)).toString(),
+                  ),
+                  _buildMetadataRow(
+                    'Umur (saat periksa)',
+                    _calculateAgeAtExamination(
+                      balitaDoc['tanggalLahir'],
+                      doc['tanggal'],
+                    ),
+                    isLast: true,
+                  ),
+                  const SizedBox(height: 12),
+                  const Divider(height: 1),
+                  const SizedBox(height: 8),
+                  _buildPemeriksaanRow(
+                    Icons.monitor_weight_outlined,
+                    'Berat Badan',
+                    '${doc['beratBadan'] ?? '-'} kg',
+                    status: doc['statusBeratBadan'],
+                  ),
+                  _buildPemeriksaanRow(
+                    Icons.height,
+                    'Tinggi Badan',
+                    '${doc['tinggiBadan'] ?? '-'} cm',
+                    status: doc['statusTinggiBadan'],
+                  ),
+                  _buildPemeriksaanRow(
+                    Icons.face_retouching_natural,
+                    'Lingkar Kepala',
+                    '${doc['lingkarKepala'] ?? '-'} cm',
+                    status: doc['statusLingkarKepala'],
+                  ),
+                  _buildPemeriksaanRow(
+                    Icons.accessibility_new,
+                    'Lingkar Lengan',
+                    '${doc['lingkarLengan'] ?? '-'} cm',
+                    status: doc['statusLingkarLengan'],
                   ),
                 ],
               ),
             );
-          }).toList(),
+          }),
           if (hasMore)
             TextButton(
               onPressed: () {
@@ -994,7 +1034,7 @@ class _BalitaState extends State<Balita> {
                       docId: balitaId,
                       data: balitaDoc.data() as Map<String, dynamic>,
                       role: 'orang-tua',
-                      initialTabIndex: 1, // To history tab
+                      initialTabIndex: 1,
                     ),
                   ),
                 );
@@ -1012,28 +1052,226 @@ class _BalitaState extends State<Balita> {
     );
   }
 
-  Widget _buildHistoryMetric(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: Colors.grey[400],
-            fontWeight: FontWeight.bold,
+  // Widget _buildHistoryMetric(String label, String value) {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       Text(
+  //         label,
+  //         style: TextStyle(
+  //           fontSize: 11,
+  //           color: Colors.grey[400],
+  //           fontWeight: FontWeight.bold,
+  //         ),
+  //       ),
+  //       const SizedBox(height: 2),
+  //       Text(
+  //         value,
+  //         style: const TextStyle(
+  //           fontSize: 13,
+  //           fontWeight: FontWeight.bold,
+  //           color: Colors.black87,
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
+
+  String _calculateAgeAtExamination(
+    dynamic birthDateData,
+    dynamic examDateData,
+  ) {
+    if (birthDateData == null || examDateData == null) return "-";
+
+    DateTime? birthDate;
+    if (birthDateData is Timestamp) {
+      birthDate = birthDateData.toDate();
+    } else if (birthDateData is DateTime) {
+      birthDate = birthDateData;
+    } else if (birthDateData is String) {
+      birthDate = DateTime.tryParse(birthDateData);
+    }
+
+    DateTime? examDate;
+    if (examDateData is Timestamp) {
+      examDate = examDateData.toDate();
+    } else if (examDateData is DateTime) {
+      examDate = examDateData;
+    } else if (examDateData is String) {
+      examDate = DateTime.tryParse(examDateData);
+    }
+
+    if (birthDate == null || examDate == null) return "-";
+
+    int months =
+        (examDate.year - birthDate.year) * 12 +
+        examDate.month -
+        birthDate.month;
+    if (examDate.day < birthDate.day) {
+      months--;
+    }
+
+    if (months < 0) return "0 Bulan";
+
+    int years = months ~/ 12;
+    int remainingMonths = months % 12;
+
+    if (years > 0) {
+      if (remainingMonths > 0) {
+        return "$years Tahun $remainingMonths Bulan";
+      }
+      return "$years Tahun";
+    }
+    return "$months Bulan";
+  }
+
+  Widget _buildMetadataRow(String label, String value, {bool isLast = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      decoration: isLast
+          ? null
+          : BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: Colors.grey.shade200, width: 0.5),
+              ),
+            ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 3,
+            height: 14,
+            decoration: BoxDecoration(
+              color: Colors.green,
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
+          const SizedBox(width: 8),
+          Text(label, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
+    );
+  }
+
+  Color _getStatusColor(String? status) {
+    if (status == null || status.isEmpty) return Colors.green;
+    String s = status.toLowerCase();
+    if (s.contains('sangat') ||
+        s.contains('buruk') ||
+        s.contains('tinggi') ||
+        s.contains('risiko tinggi')) {
+      return Colors.redAccent;
+    } else if (s.contains('normal') || s.contains('aman')) {
+      return Colors.green;
+    } else if (s.contains('pendek') ||
+        s.contains('kurang') ||
+        s.contains('sefali') ||
+        s.contains('lebih') ||
+        s.contains('risiko rendah') ||
+        s.contains('sedang') ||
+        s.contains('rendah')) {
+      return Colors.orange;
+    }
+    return Colors.green;
+  }
+
+  Widget _buildPemeriksaanRow(
+    IconData icon,
+    String label,
+    String value, {
+    bool isEnabled = true,
+    String? status,
+    bool showTooltip = true,
+  }) {
+    Color activeColor = (status != null && status.isNotEmpty)
+        ? _getStatusColor(status)
+        : Colors.green;
+
+    Color iconBgColor = isEnabled
+        ? activeColor.withValues(alpha: 0.1)
+        : Colors.grey.withValues(alpha: 0.1);
+    Color iconColor = isEnabled ? activeColor : Colors.grey;
+    Color labelColor = isEnabled ? Colors.grey[700]! : Colors.grey[500]!;
+    Color valueColor = isEnabled ? Colors.black87 : Colors.grey[400]!;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: iconBgColor,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(icon, color: iconColor, size: 16),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: labelColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Wrap(
+              alignment: WrapAlignment.end,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 6,
+              children: [
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: valueColor,
+                  ),
+                ),
+                if (showTooltip && status != null && status.isNotEmpty)
+                  Tooltip(
+                    message: status,
+                    triggerMode: TooltipTriggerMode.tap,
+                    showDuration: const Duration(seconds: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: _getStatusColor(status).withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    textStyle: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    child: Icon(
+                      Icons.help_outline,
+                      size: 14,
+                      color: _getStatusColor(status),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

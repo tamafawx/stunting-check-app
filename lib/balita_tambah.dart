@@ -238,7 +238,18 @@ class _TambahBalitaState extends State<TambahBalita> {
     }
   }
 
+  String _capitalizeWords(String input) {
+    if (input.isEmpty) return input;
+    return input.split(' ').map((word) {
+      if (word.isEmpty) return word;
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
+  }
+
   Future<void> _simpanData() async {
+    // Paksa perbarui nilai di controller agar UI juga terupdate menjadi kapital
+    _namaController.text = _capitalizeWords(_namaController.text.trim());
+
     if (_formKey.currentState!.validate()) {
       if (_tanggalLahir == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -272,8 +283,8 @@ class _TambahBalitaState extends State<TambahBalita> {
         String joinedNames = ortuNames.join(', ');
 
         await FirebaseFirestore.instance.collection('balita').add({
-          'nama': _namaController.text.trim(),
-          'jenisKelamin': _jenisKelamin,
+          'nama': _capitalizeWords(_namaController.text.trim()),
+          'jenisKelamin': _jenisKelamin == "Laki-laki" ? "male" : "female",
           'tanggalLahir': Timestamp.fromDate(_tanggalLahir!),
           'namaOrangTua': joinedNames,
           'orangTuaIds': ortuIds,
@@ -474,6 +485,7 @@ class _TambahBalitaState extends State<TambahBalita> {
                                 const SizedBox(height: 8),
                                 TextFormField(
                                   controller: _namaController,
+                                  textCapitalization: TextCapitalization.words,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
                                   ),

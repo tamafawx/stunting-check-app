@@ -31,6 +31,7 @@ class _DetailBalitaState extends State<DetailBalita>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   Map<String, dynamic> _balitaData = {};
+  // ignore: unused_field
   bool _isLoading = true;
 
   Color get themeColor => widget.role == 'bidan' ? Colors.purple : Colors.blue;
@@ -227,20 +228,25 @@ class _DetailBalitaState extends State<DetailBalita>
                                   'waktuCatatan': FieldValue.serverTimestamp(),
                                 });
 
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Catatan berhasil ditambahkan'),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Catatan berhasil ditambahkan'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
                           } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Gagal menambahkan catatan'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Gagal menambahkan catatan'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+
                             setStateDialog(() => isSubmitting = false);
                           }
                         },
@@ -294,13 +300,14 @@ class _DetailBalitaState extends State<DetailBalita>
                     'catatan': FieldValue.delete(),
                     'waktuCatatan': FieldValue.delete(),
                   });
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Catatan berhasil dihapus'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Catatan berhasil dihapus'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
             },
             child: const Text('Hapus', style: TextStyle(color: Colors.white)),
           ),
@@ -774,12 +781,14 @@ class _DetailBalitaState extends State<DetailBalita>
                   fotoUrl: fotoUrl,
                 );
               } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Gagal mengunduh laporan: $e'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Gagal mengunduh laporan: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               }
             },
           ),
@@ -824,12 +833,12 @@ class _DetailBalitaState extends State<DetailBalita>
                   ),
                   child: CircleAvatar(
                     radius: 40,
-                    backgroundColor: jenisKelamin == 'Laki-laki'
+                    backgroundColor: jenisKelamin == 'male'
                         ? themeColor.withValues(alpha: 0.1)
                         : Colors.pink[50],
                     child: CircleAvatar(
                       radius: 36,
-                      backgroundColor: jenisKelamin == 'Laki-laki'
+                      backgroundColor: jenisKelamin == 'male'
                           ? themeColor.withValues(alpha: 0.2)
                           : Colors.pink[100],
                       backgroundImage: fotoUrl != null && fotoUrl.isNotEmpty
@@ -839,7 +848,7 @@ class _DetailBalitaState extends State<DetailBalita>
                           ? Icon(
                               Icons.child_care_rounded,
                               size: 44,
-                              color: jenisKelamin == 'Laki-laki'
+                              color: jenisKelamin == 'male'
                                   ? themeColor
                                   : Colors.pink[700],
                             )
@@ -864,7 +873,11 @@ class _DetailBalitaState extends State<DetailBalita>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "$jenisKelamin, $usiaText",
+                        "${jenisKelamin == "male"
+                            ? "Laki-Laki"
+                            : jenisKelamin == "female"
+                            ? "Perempuan"
+                            : "Unknown"}, $usiaText",
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[600],
@@ -889,7 +902,9 @@ class _DetailBalitaState extends State<DetailBalita>
                               Clipboard.setData(ClipboardData(text: idBalita));
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('ID Balita disalin ke clipboard'),
+                                  content: Text(
+                                    'ID Balita disalin ke clipboard',
+                                  ),
                                   duration: Duration(seconds: 2),
                                 ),
                               );
@@ -1009,15 +1024,19 @@ class _DetailBalitaState extends State<DetailBalita>
         String berat = latestDoc['beratBadan'] != null
             ? "${latestDoc['beratBadan']} kg"
             : "-";
+        String statusBerat = latestDoc['statusBeratBadan'] ?? '';
         String tinggi = latestDoc['tinggiBadan'] != null
             ? "${latestDoc['tinggiBadan']} cm"
             : "-";
+        String statusTinggi = latestDoc['statusTinggiBadan'] ?? '';
         String kepala = latestDoc['lingkarKepala'] != null
             ? "${latestDoc['lingkarKepala']} cm"
             : "-";
+        String statusKepala = latestDoc['statusLingkarKepala'] ?? '';
         String lengan = latestDoc['lingkarLengan'] != null
             ? "${latestDoc['lingkarLengan']} cm"
             : "-";
+        String statusLengan = latestDoc['statusLingkarLengan'] ?? '';
 
         String tglPemeriksaan = "-";
         if (latestDoc['tanggal'] != null) {
@@ -1027,7 +1046,7 @@ class _DetailBalitaState extends State<DetailBalita>
               "${dt.day.toString().padLeft(2, '0')} ${_getMonthName(dt.month)} ${dt.year}";
         }
 
-        String statusStunting = latestDoc['statusStunting'] ?? "Memproses...";
+        String statusStunting = latestDoc['statusBalita'] ?? "Memproses...";
         Color alertColor = Colors.green;
         Color bgColor = Colors.green.shade50;
         Color borderColor = Colors.green.shade200;
@@ -1080,18 +1099,20 @@ class _DetailBalitaState extends State<DetailBalita>
                   children: [
                     _buildMeasurementRow(
                       icon: Icons.scale_outlined,
-                      label: "Berat Badan Terakhir",
+                      label: "Berat Badan",
                       value: berat,
                       date: tglPemeriksaan,
                       color: themeColor,
+                      status: statusBerat,
                     ),
                     const Divider(height: 16, thickness: 0.5),
                     _buildMeasurementRow(
                       icon: Icons.straighten_rounded,
-                      label: "Tinggi Badan Terakhir",
+                      label: "Tinggi Badan",
                       value: tinggi,
                       date: tglPemeriksaan,
                       color: themeColor,
+                      status: statusTinggi,
                     ),
                     const Divider(height: 16, thickness: 0.5),
                     _buildMeasurementRow(
@@ -1100,6 +1121,7 @@ class _DetailBalitaState extends State<DetailBalita>
                       value: kepala,
                       date: tglPemeriksaan,
                       color: themeColor,
+                      status: statusKepala,
                     ),
                     const Divider(height: 16, thickness: 0.5),
                     _buildMeasurementRow(
@@ -1108,6 +1130,7 @@ class _DetailBalitaState extends State<DetailBalita>
                       value: lengan,
                       date: tglPemeriksaan,
                       color: Colors.green[600]!,
+                      status: statusLengan,
                     ),
                   ],
                 ),
@@ -1268,7 +1291,7 @@ class _DetailBalitaState extends State<DetailBalita>
             String formattedDate =
                 "${dt.day.toString().padLeft(2, '0')} ${_getMonthName(dt.month)} ${dt.year}";
 
-            String statusRiwayat = doc['statusStunting'] ?? "Memproses...";
+            String statusRiwayat = doc['statusBalita'] ?? "Memproses...";
             Color bgStatusColor = Colors.grey.shade100;
             Color textStatusColor = Colors.grey.shade600;
 
@@ -1336,26 +1359,46 @@ class _DetailBalitaState extends State<DetailBalita>
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildHistoryMetric(
-                        "BB",
-                        "${doc['beratBadan'] ?? '-'} kg",
-                      ),
-                      _buildHistoryMetric(
-                        "TB",
-                        "${doc['tinggiBadan'] ?? '-'} cm",
-                      ),
-                      _buildHistoryMetric(
-                        "LK",
-                        "${doc['lingkarKepala'] ?? '-'} cm",
-                      ),
-                      _buildHistoryMetric(
-                        "LILA",
-                        "${doc['lingkarLengan'] ?? '-'} cm",
-                      ),
-                    ],
+                  _buildMetadataRow('ID Pemeriksaan', docs[index].id),
+                  _buildMetadataRow(
+                    'Pemeriksaan Ke',
+                    (docs.length - index).toString(),
+                  ),
+                  _buildMetadataRow(
+                    'Umur (saat periksa)',
+                    _calculateAgeAtExamination(
+                      _balitaData['tanggalLahir'] ??
+                          widget.data['tanggalLahir'],
+                      doc['tanggal'],
+                    ),
+                    isLast: true,
+                  ),
+                  const SizedBox(height: 12),
+                  const Divider(height: 1),
+                  const SizedBox(height: 8),
+                  _buildPemeriksaanRow(
+                    Icons.monitor_weight_outlined,
+                    'Berat Badan',
+                    '${doc['beratBadan'] ?? '-'} kg',
+                    status: doc['statusBeratBadan'],
+                  ),
+                  _buildPemeriksaanRow(
+                    Icons.height,
+                    'Tinggi Badan',
+                    '${doc['tinggiBadan'] ?? '-'} cm',
+                    status: doc['statusTinggiBadan'],
+                  ),
+                  _buildPemeriksaanRow(
+                    Icons.face_retouching_natural,
+                    'Lingkar Kepala',
+                    '${doc['lingkarKepala'] ?? '-'} cm',
+                    status: doc['statusLingkarKepala'],
+                  ),
+                  _buildPemeriksaanRow(
+                    Icons.accessibility_new,
+                    'Lingkar Lengan',
+                    '${doc['lingkarLengan'] ?? '-'} cm',
+                    status: doc['statusLingkarLengan'],
                   ),
                 ],
               ),
@@ -1366,28 +1409,179 @@ class _DetailBalitaState extends State<DetailBalita>
     );
   }
 
-  Widget _buildHistoryMetric(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: Colors.grey[400],
-            fontWeight: FontWeight.bold,
+  Widget _buildPemeriksaanRow(
+    IconData icon,
+    String label,
+    String value, {
+    bool isEnabled = true,
+    String? status,
+    bool showTooltip = true,
+  }) {
+    Color activeColor = (status != null && status.isNotEmpty)
+        ? _getStatusColor(status)
+        : themeColor;
+
+    Color iconBgColor = isEnabled
+        ? activeColor.withValues(alpha: 0.1)
+        : Colors.grey.withValues(alpha: 0.1);
+    Color iconColor = isEnabled ? activeColor : Colors.grey;
+    Color labelColor = isEnabled ? Colors.grey[700]! : Colors.grey[500]!;
+    Color valueColor = isEnabled ? Colors.black87 : Colors.grey[400]!;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: iconBgColor,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(icon, color: iconColor, size: 16),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
+          const SizedBox(width: 10),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: labelColor,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ),
-      ],
+          const SizedBox(width: 8),
+          Expanded(
+            child: Wrap(
+              alignment: WrapAlignment.end,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 6,
+              children: [
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: valueColor,
+                  ),
+                ),
+                if (showTooltip && status != null && status.isNotEmpty)
+                  Tooltip(
+                    message: status,
+                    triggerMode: TooltipTriggerMode.tap,
+                    showDuration: const Duration(seconds: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: _getStatusColor(status).withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    textStyle: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    child: Icon(
+                      Icons.help_outline,
+                      size: 14,
+                      color: _getStatusColor(status),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _calculateAgeAtExamination(
+    dynamic birthDateData,
+    dynamic examDateData,
+  ) {
+    if (birthDateData == null || examDateData == null) return "-";
+
+    DateTime? birthDate;
+    if (birthDateData is Timestamp) {
+      birthDate = birthDateData.toDate();
+    } else if (birthDateData is DateTime) {
+      birthDate = birthDateData;
+    } else if (birthDateData is String) {
+      birthDate = DateTime.tryParse(birthDateData);
+    }
+
+    DateTime? examDate;
+    if (examDateData is Timestamp) {
+      examDate = examDateData.toDate();
+    } else if (examDateData is DateTime) {
+      examDate = examDateData;
+    } else if (examDateData is String) {
+      examDate = DateTime.tryParse(examDateData);
+    }
+
+    if (birthDate == null || examDate == null) return "-";
+
+    int months =
+        (examDate.year - birthDate.year) * 12 +
+        examDate.month -
+        birthDate.month;
+    if (examDate.day < birthDate.day) {
+      months--;
+    }
+
+    if (months < 0) return "0 Bulan";
+
+    int years = months ~/ 12;
+    int remainingMonths = months % 12;
+
+    if (years > 0) {
+      if (remainingMonths > 0) {
+        return "$years Tahun $remainingMonths Bulan";
+      }
+      return "$years Tahun";
+    }
+    return "$months Bulan";
+  }
+
+  Widget _buildMetadataRow(String label, String value, {bool isLast = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      decoration: isLast
+          ? null
+          : BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: Colors.grey.shade200, width: 0.5),
+              ),
+            ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 3,
+            height: 14,
+            decoration: BoxDecoration(
+              color: themeColor,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(label, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1550,13 +1744,35 @@ class _DetailBalitaState extends State<DetailBalita>
     );
   }
 
+  Color _getStatusColor(String status) {
+    String s = status.toLowerCase();
+    if (s.contains('sangat') ||
+        s.contains('buruk') ||
+        s.contains('risiko tinggi')) {
+      return Colors.redAccent;
+    } else if (s.contains('normal') || s.contains('aman')) {
+      return Colors.green;
+    } else if (s.contains('pendek') ||
+        s.contains('kurang') ||
+        s.contains('sefali') ||
+        s.contains('tinggi') ||
+        s.contains('lebih') ||
+        s.contains('risiko rendah')) {
+      return Colors.orange;
+    }
+    return themeColor;
+  }
+
   Widget _buildMeasurementRow({
     required IconData icon,
     required String label,
     required String value,
     required String date,
     required Color color,
+    required String status,
   }) {
+    Color activeColor = (status.isNotEmpty) ? _getStatusColor(status) : color;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -1564,10 +1780,10 @@ class _DetailBalitaState extends State<DetailBalita>
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
+              color: activeColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: color, size: 22),
+            child: Icon(icon, color: activeColor, size: 22),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -1590,13 +1806,45 @@ class _DetailBalitaState extends State<DetailBalita>
               ],
             ),
           ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
+          Wrap(
+            alignment: WrapAlignment.end,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              if (status.isNotEmpty)
+                Tooltip(
+                  message: status,
+                  triggerMode: TooltipTriggerMode.tap,
+                  showDuration: const Duration(seconds: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(status).withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  textStyle: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  child: Icon(
+                    Icons.help_outline,
+                    size: 18,
+                    color: _getStatusColor(status),
+                  ),
+                ),
+            ],
           ),
         ],
       ),

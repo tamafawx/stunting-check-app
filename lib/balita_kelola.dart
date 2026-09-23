@@ -240,7 +240,7 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                   if (!latestDateMap.containsKey(bId) ||
                       date.isAfter(latestDateMap[bId]!)) {
                     latestDateMap[bId] = date;
-                    latestStatusMap[bId] = data['statusStunting'] ?? 'Normal';
+                    latestStatusMap[bId] = data['statusBalita'] ?? 'Normal';
                   }
                 }
               }
@@ -586,8 +586,7 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                                     },
                                     leading: CircleAvatar(
                                       radius: 24,
-                                      backgroundColor:
-                                          jenisKelamin == 'Laki-laki'
+                                      backgroundColor: jenisKelamin == 'male'
                                           ? themeColor.withValues(alpha: 0.15)
                                           : Colors.pink.withValues(alpha: 0.15),
                                       backgroundImage:
@@ -598,7 +597,7 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                                           (fotoUrl == null || fotoUrl.isEmpty)
                                           ? Icon(
                                               Icons.child_care,
-                                              color: jenisKelamin == 'Laki-laki'
+                                              color: jenisKelamin == 'male'
                                                   ? themeColor
                                                   : Colors.pink,
                                             )
@@ -617,7 +616,11 @@ class _KelolaBalitaState extends State<KelolaBalita> {
                                     subtitle: Padding(
                                       padding: const EdgeInsets.only(top: 4.0),
                                       child: Text(
-                                        '$usia   $jenisKelamin',
+                                        '$usia - ${jenisKelamin == "male"
+                                            ? "Laki-Laki"
+                                            : jenisKelamin == "female"
+                                            ? "Perempuan"
+                                            : "Unknown"}',
                                         style: const TextStyle(
                                           color: Colors.black54,
                                           fontSize: 12,
