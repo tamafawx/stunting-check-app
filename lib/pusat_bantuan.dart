@@ -23,14 +23,14 @@ class PusatBantuan extends StatelessWidget {
     _launchUrl(waUrl);
   }
 
-  String? _encodeQueryParameters(Map<String, String> params) {
-    return params.entries
-        .map(
-          (MapEntry<String, String> e) =>
-              '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}',
-        )
-        .join('&');
-  }
+  // String? _encodeQueryParameters(Map<String, String> params) {
+  //   return params.entries
+  //       .map(
+  //         (MapEntry<String, String> e) =>
+  //             '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}',
+  //       )
+  //       .join('&');
+  // }
 
   LinearGradient _getRoleGradient(String currentRole) {
     switch (currentRole.toLowerCase()) {
