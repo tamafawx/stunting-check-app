@@ -41,7 +41,7 @@ dependencies:
   printing: ^5.15.0
   flutter_launcher_icons: ^0.14.4
   shared_preferences: ^2.5.5
-  flutter_local_notifications:
+  flutter_local_notifications: ^22.3.1
   fl_chart: ^1.2.0
   flutter_map: ^8.3.1
   latlong2: ^0.10.1
@@ -83,9 +83,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - assets/app.zip
-
+  assets:
+    - assets/who-data-csv/
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 
